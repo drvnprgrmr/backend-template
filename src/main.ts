@@ -1,8 +1,11 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { ConfigService } from '@nestjs/config';
-import { Config } from './config';
 import { ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+
+import helmet from 'helmet';
+
+import { AppModule } from './app.module';
+import { Config } from './config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -11,6 +14,8 @@ async function bootstrap() {
 
   const port = configService.get('port', { infer: true });
   const cors = configService.get('cors', { infer: true });
+
+  app.use(helmet());
 
   app.useGlobalPipes(
     new ValidationPipe({
