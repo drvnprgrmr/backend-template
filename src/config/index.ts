@@ -3,6 +3,7 @@ import * as crypto from 'crypto';
 export interface Config {
   apiUrl: string;
   websiteUrl: string;
+  isProduction: boolean;
   port: number;
   mongo: { uri: string };
   cors: { origin: string[] | string };
@@ -26,6 +27,7 @@ export function configuration() {
   const config: Config = {
     apiUrl,
     websiteUrl,
+    isProduction,
     port: parseInt(process.env.PORT) || randomPort,
     mongo: {
       uri: process.env.MONGO_URI || `mongodb://127.0.0.1:27017/${appName}`,
