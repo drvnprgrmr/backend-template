@@ -22,8 +22,8 @@ import { UserModule } from './user/user.module';
     MongooseModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService<Config, true>) => {
-        const mongo = configService.get('mongo', { infer: true });
-        return { uri: mongo.uri };
+        const mongoConfig = configService.get('mongo', { infer: true });
+        return { uri: mongoConfig.uri };
       },
     }),
     ConfigModule.forRoot({
