@@ -1,0 +1,55 @@
+import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+
+import * as sgMail from '@sendgrid/mail';
+import { MailDataRequired } from '@sendgrid/mail';
+
+import { Config } from 'src/config';
+
+export enum SendgridEmailTemplate {
+  EMAIL_VERIFICATION = 'd-1',
+  RESET_PASSWORD = 'd-2',
+  NEW_NOTIFICATION = 'd-3',
+}
+
+export enum SendgridEmailAddress {
+  SUPPORT = 'support@example.com',
+  NO_REPLY = 'noreply@example.com',
+}
+
+@Injectable()
+export class SendgridEmailService {
+  private readonly logger: Logger = new Logger(SendgridEmailService.name);
+
+  constructor(private readonly configService: ConfigService<Config, true>) {
+    const sgApiKey = this.configService.get('sendgrid.apiKey', { infer: true });
+    sgMail.setApiKey(sgApiKey);
+  }
+
+  private async send(mail: MailDataRequired) {
+    try {
+      await sgMail.send(mail);
+    } catch (err) {
+      this.logger.error(`Error sending email to ${mail.to}`, err);
+      throw err;
+    }
+  }
+
+  async sendFromTemplate(data: {
+    from?: SendgridEmailAddress;
+    replyTo?: string;
+    to: SendgridEmailAddress | string;
+    templateId: SendgridEmailTemplate;
+    dynamicTemplateData: object;
+  }) {
+    const { from, replyTo, to, templateId, dynamicTemplateData } = data;
+
+    await this.send({
+      from: from || SendgridEmailAddress.SUPPORT,
+      replyTo: replyTo || from || undefined,
+      to,
+      templateId,
+      dynamicTemplateData,
+    });
+  }
+}

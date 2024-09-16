@@ -16,6 +16,7 @@ export interface Config {
   mongo: { uri: string };
   cors: { origin: string[] | string };
   jwt: { secret: string; issuer: string; audience: string; expiresIn: string };
+  sendgrid: { apiKey: string };
   aws: AwsConfig;
 }
 
@@ -50,6 +51,7 @@ export function configuration() {
       audience: env.JWT_AUDIENCE || websiteUrl,
       expiresIn: env.JWT_EXPIRES_IN || '30d',
     },
+    sendgrid: { apiKey: env.SENDGRID_API_KEY },
     aws: {
       region: env.AWS_REGION || 'eu-north-1',
       s3: { bucketName: env.AWS_S3_BUCKET_NAME || 'test' },
