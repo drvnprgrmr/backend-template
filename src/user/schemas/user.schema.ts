@@ -5,8 +5,17 @@ import { Email, Name, Nonce, Phone, Wallet } from 'src/common/schemas';
 
 export type UserDocument = HydratedDocument<User>;
 
+// todo: add max and min length constants and add enforce in dtos
+
+/**
+ * All attributes are not required by default.
+ * Modify to suit the app's requirements.
+ */
 @Schema({ timestamps: true })
 export class User {
+  @Prop({ type: String, trim: true, lowercase: true, unique: true })
+  username?: string;
+
   @Prop({ type: Name })
   name?: Name;
 
@@ -15,6 +24,9 @@ export class User {
 
   @Prop({ type: Phone })
   phone?: Phone;
+
+  @Prop()
+  bio?: string;
 
   @Prop()
   password?: string;
@@ -28,6 +40,7 @@ export class User {
   @Prop({ type: Nonce })
   nonce?: Nonce;
 
+  @Prop({ type: Wallet })
   wallet?: Wallet;
 }
 
