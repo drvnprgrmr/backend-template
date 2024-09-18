@@ -1,6 +1,7 @@
-import { Prop } from '@nestjs/mongoose';
+import { Prop, Schema } from '@nestjs/mongoose';
 import { isPhoneNumber } from 'class-validator';
 
+@Schema({ _id: false })
 export class Phone {
   @Prop({
     type: String,

@@ -47,7 +47,6 @@ export class SignupDto {
   @IsOptional()
   gender?: Gender;
 
-  @Type(() => Date)
   @IsDateString()
   @IsOptional()
   birthday?: Date;

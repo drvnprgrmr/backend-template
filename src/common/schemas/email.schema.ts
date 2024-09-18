@@ -1,6 +1,7 @@
-import { Prop } from '@nestjs/mongoose';
+import { Prop, Schema } from '@nestjs/mongoose';
 import { isEmail } from 'class-validator';
 
+@Schema({ _id: false })
 export class Email {
   @Prop({
     type: String,
