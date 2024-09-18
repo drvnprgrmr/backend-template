@@ -6,7 +6,7 @@ import { Upload } from '@aws-sdk/lib-storage';
 
 import * as fs from 'node:fs/promises';
 import { ReadStream } from 'fs';
-import { AwsCloudfrontService } from 'src/aws/aws-cloudfront/aws-cloudfront.service';
+import { AwsCloudfrontService } from './aws-cloudfront.service';
 import { AwsConfig, Config } from 'src/config';
 
 export interface CreateObjectOptions {
