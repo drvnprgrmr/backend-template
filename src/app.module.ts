@@ -7,8 +7,8 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { Config, configuration } from './config';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
-import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -21,17 +21,38 @@ import { UserModule } from './user/user.module';
     }),
     MongooseModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (configService: ConfigService<Config, true>) => {
+      useFactory(configService: ConfigService<Config, true>) {
         const mongoConfig = configService.get('mongo', { infer: true });
         return { uri: mongoConfig.uri };
       },
+    }),
+    JwtModule.registerAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService<Config, true>) => {
+        const jwtConfig = configService.get('jwt', { infer: true });
+
+        return {
+          secret: jwtConfig.secret,
+
+          signOptions: {
+            issuer: jwtConfig.issuer,
+            audience: jwtConfig.audience,
+            expiresIn: jwtConfig.expiresIn,
+          },
+
+          verifyOptions: {
+            issuer: jwtConfig.issuer,
+            audience: jwtConfig.audience,
+          },
+        };
+      },
+      global: true,
     }),
     ConfigModule.forRoot({
       load: [configuration],
       isGlobal: true,
       cache: true,
     }),
-    AuthModule,
     UserModule,
   ],
   controllers: [AppController],

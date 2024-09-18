@@ -14,7 +14,7 @@ import { Gender } from 'src/common/enums';
  * All fields are made optional by default.
  * Modify to suit the app's requirements.
  */
-export class CreateUserDto {
+export class SignupDto {
   @IsString()
   @IsOptional()
   username?: string;
