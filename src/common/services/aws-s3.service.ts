@@ -9,39 +9,35 @@ import { ReadStream } from 'fs';
 import { AwsCloudfrontService } from './aws-cloudfront.service';
 import { AwsConfig, Config } from 'src/config';
 
-export interface CreateObjectOptions {
-  key: string;
-  body: ReadStream;
-  meta: {
-    length?: number;
-    mimetype?: string;
-  };
-}
-
 export interface UploadFileOptions {
   path: string;
   key: string;
   length: number;
   mimetype: string;
+  metadata?: Record<string, string>;
+}
+
+export interface CreateObjectOptions extends UploadFileOptions {
+  body: ReadStream;
+  file: fs.FileHandle;
 }
 
 @Injectable()
 export class AwsS3Service {
   private readonly logger: Logger = new Logger(AwsS3Service.name);
-  private readonly client: S3Client;
   private readonly awsConfig: AwsConfig;
+  private readonly client: S3Client;
 
   constructor(
     private readonly configService: ConfigService<Config, true>,
     private readonly awsCloudfrontService: AwsCloudfrontService,
   ) {
-    const awsConfig = this.configService.get('aws', { infer: true });
-
-    this.client = new S3Client({ region: awsConfig.region });
+    this.awsConfig = this.configService.get('aws', { infer: true });
+    this.client = new S3Client({ region: this.awsConfig.region });
   }
 
-  async createObject(options: CreateObjectOptions) {
-    const { key, body, meta } = options;
+  createObject(options: CreateObjectOptions) {
+    const { key, body, file, path, mimetype, length, metadata } = options;
 
     const upload = new Upload({
       client: this.client,
@@ -49,19 +45,25 @@ export class AwsS3Service {
         Bucket: this.awsConfig.s3.bucketName,
         Key: key,
         Body: body,
-        ContentType: meta?.mimetype,
-        ContentLength: meta?.length,
+        ContentType: mimetype,
+        ContentLength: length,
+        Metadata: metadata,
       },
     });
 
-    return await upload.done();
+    upload.done().then(async (result) => {
+      await file.close();
+      await fs.unlink(path);
+
+      this.logger.verbose(result);
+    });
   }
 
   async uploadFile(
     options: UploadFileOptions,
     performInvalidation: boolean = true,
   ) {
-    const { path, key, length, mimetype } = options;
+    const { path, key, length, mimetype, metadata } = options;
 
     const file = await fs.open(path);
     const stream = file.createReadStream();
@@ -69,20 +71,16 @@ export class AwsS3Service {
     if (performInvalidation)
       await this.awsCloudfrontService.invalidatePath('/' + key);
 
-    const response = await this.createObject({
+    this.createObject({
       key,
       body: stream,
-      meta: {
-        length,
-        mimetype,
-      },
+      file,
+      path,
+      length,
+      mimetype,
+      metadata,
     });
 
-    await file.close();
-    await fs.unlink(path);
-
-    const url = this.awsCloudfrontService.getUrl(key);
-    this.logger.debug(response, url);
-    return url;
+    return this.awsCloudfrontService.getUrl(key);
   }
 }

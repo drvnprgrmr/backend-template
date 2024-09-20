@@ -1,7 +1,20 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Req,
+  UploadedFiles,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import { SignupDto } from './dto/signup.dto';
 import { UserService } from './user.service';
 import { LoginDto } from './dto/login.dto';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { ThrottlerGuard } from '@nestjs/throttler';
+import { UserGuard, UserPopulatedRequest } from './user.guard';
 
 @Controller('user')
 export class UserController {
@@ -18,5 +31,15 @@ export class UserController {
     return await this.userService.login(body);
   }
 
+  async getUserProfile() {}
 
+  @UseInterceptors(FilesInterceptor('files'))
+  @UseGuards(UserGuard, ThrottlerGuard)
+  @Post('/upload')
+  async upload(
+    @Req() req: UserPopulatedRequest,
+    @UploadedFiles() files: Express.Multer.File[],
+  ) {
+    return await this.userService.upload(req.user.id, files);
+  }
 }

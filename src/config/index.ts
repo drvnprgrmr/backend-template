@@ -1,4 +1,9 @@
-import * as crypto from 'crypto';
+import * as crypto from 'node:crypto';
+import * as os from 'node:os';
+import * as path from 'node:path';
+
+export const APP_NAME = 'template';
+export const TMP_DIR = path.join(os.tmpdir(), APP_NAME);
 
 const env = process.env;
 
@@ -21,7 +26,6 @@ export interface Config {
 }
 
 export function configuration() {
-  const appName = 'template';
   const apiUrl = 'https://api.template.com';
   const websiteUrl = 'https://template.com';
 
@@ -40,7 +44,7 @@ export function configuration() {
     isProduction,
     port: parseInt(env.PORT) || randomPort,
     mongo: {
-      uri: env.MONGO_URI || `mongodb://127.0.0.1:27017/${appName}`,
+      uri: env.MONGO_URI || `mongodb://127.0.0.1:27017/${APP_NAME}`,
     },
     cors: {
       origin: corsOrigin,
