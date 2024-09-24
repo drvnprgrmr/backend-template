@@ -1,6 +1,9 @@
 import * as crypto from 'node:crypto';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import { EnvironmentVariables } from './environment-variables';
+import { plainToInstance } from 'class-transformer';
+import { validateSync } from 'class-validator';
 
 export const APP_NAME = 'template';
 export const TMP_DIR = path.join(os.tmpdir(), APP_NAME);
@@ -67,4 +70,18 @@ export function configuration() {
   };
 
   return config;
+}
+
+export function validateEnv(config: Record<string, unknown>) {
+  const validatedConfig = plainToInstance(EnvironmentVariables, config, {
+    enableImplicitConversion: true,
+  });
+
+  const errors = validateSync(validatedConfig, {
+    skipMissingProperties: true,
+  });
+
+  if (errors.length > 0) throw new Error(errors.toString());
+
+  return validatedConfig;
 }

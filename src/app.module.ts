@@ -5,7 +5,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { Config, configuration } from './config';
+import { Config, configuration, validateEnv } from './config';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { UserModule } from './user/user.module';
 import { JwtModule } from '@nestjs/jwt';
@@ -50,6 +50,7 @@ import { JwtModule } from '@nestjs/jwt';
     }),
     ConfigModule.forRoot({
       load: [configuration],
+      validate: validateEnv,
       isGlobal: true,
       cache: true,
     }),
