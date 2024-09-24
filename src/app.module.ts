@@ -9,6 +9,7 @@ import { Config, configuration, validateEnv } from './config';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { UserModule } from './user/user.module';
 import { JwtModule } from '@nestjs/jwt';
+import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
@@ -28,7 +29,7 @@ import { JwtModule } from '@nestjs/jwt';
     }),
     JwtModule.registerAsync({
       inject: [ConfigService],
-      useFactory: (configService: ConfigService<Config, true>) => {
+      useFactory(configService: ConfigService<Config, true>) {
         const jwtConfig = configService.get('jwt', { infer: true });
 
         return {
@@ -55,6 +56,7 @@ import { JwtModule } from '@nestjs/jwt';
       cache: true,
     }),
     UserModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [AppService],
