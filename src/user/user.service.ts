@@ -60,13 +60,16 @@ export class UserService {
     for (const file of files) {
       const key = crypto.randomUUID().toString();
 
-      const url = await this.awsS3Service.uploadFile({
-        key,
-        path: file.path,
-        length: file.size,
-        mimetype: file.mimetype,
-        metadata: { userId: userId.toString() },
-      });
+      const url = await this.awsS3Service.uploadFile(
+        {
+          key,
+          path: file.path,
+          length: file.size,
+          mimetype: file.mimetype,
+          metadata: { userId: userId.toString() },
+        },
+        false,
+      );
 
       urls.push(url);
     }
