@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { JwtService } from '@nestjs/jwt';
 import { Model, Types } from 'mongoose';
@@ -9,15 +9,24 @@ import { UserMethods } from './schemas/methods';
 import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
 import { AwsS3Service } from 'src/common/services';
+import { UserNotFoundException } from './exceptions';
 
 @Injectable()
 export class UserService {
+  private readonly logger: Logger = new Logger(UserService.name);
+
   constructor(
     @InjectModel(User.name)
     readonly userModel: Model<User, object, UserMethods>,
     private readonly jwtService: JwtService,
     private readonly awsS3Service: AwsS3Service,
   ) {}
+
+  async getUsers() {
+    const users = await this.userModel.find().lean().exec();
+
+    return { message: 'User list fetched.', data: { users } };
+  }
 
   async signup(dto: SignupDto) {
     let user = await this.userModel
@@ -50,6 +59,22 @@ export class UserService {
 
     return { message: 'User login successful!', data: { user, token } };
   }
+
+  async getUserProfile(dto) {}
+
+  async getPublicProfile(userId: Types.ObjectId) {
+    const user = await this.userModel
+      .findById(userId)
+      .select('-password')
+      .lean()
+      .exec();
+
+    if (!user) throw new UserNotFoundException();
+
+    return { message: 'User data fetched!', data: { user } };
+  }
+
+  async updateUser(userId: Types.ObjectId, dto) {}
 
   async upload(userId: Types.ObjectId, files: Express.Multer.File[]) {
     if (files.length === 0)

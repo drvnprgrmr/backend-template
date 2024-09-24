@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
@@ -15,31 +16,42 @@ import { LoginDto } from './dto/login.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { UserGuard, UserPopulatedRequest } from './user.guard';
+import { Types } from 'mongoose';
+import { ObjectId } from 'src/common/decorators';
 
-@Controller('user')
+@Controller('/user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  // todo: protect with admin guard
+  @Get()
+  getUsers() {
+    return this.userService.getUsers();
+  }
+
   @Post('/signup')
-  async signup(@Body() body: SignupDto) {
-    return await this.userService.signup(body);
+  signup(@Body() body: SignupDto) {
+    return this.userService.signup(body);
   }
 
   @HttpCode(HttpStatus.OK)
   @Post('/login')
-  async login(@Body() body: LoginDto) {
-    return await this.userService.login(body);
+  login(@Body() body: LoginDto) {
+    return this.userService.login(body);
   }
 
-  async getUserProfile() {}
+  @Get('/:id')
+  getPublicProfile(@ObjectId() id: Types.ObjectId) {
+    return this.userService.getPublicProfile(id);
+  }
 
   @UseInterceptors(FilesInterceptor('files'))
   @UseGuards(UserGuard, ThrottlerGuard)
   @Post('/upload')
-  async upload(
+  upload(
     @Req() req: UserPopulatedRequest,
     @UploadedFiles() files: Express.Multer.File[],
   ) {
-    return await this.userService.upload(req.user.id, files);
+    return this.userService.upload(req.user.id, files);
   }
 }
