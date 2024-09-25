@@ -8,6 +8,7 @@ import {
 } from './schemas/notification.schema';
 import { UserModule } from 'src/user/user.module';
 import { SendgridEmailService } from 'src/common/services/sendgrid-email.service';
+import { FirebaseMessagingService } from 'src/common/services';
 
 @Module({
   imports: [
@@ -28,7 +29,11 @@ import { SendgridEmailService } from 'src/common/services/sendgrid-email.service
       },
     ]),
   ],
-  providers: [NotificationService, SendgridEmailService],
+  providers: [
+    NotificationService,
+    SendgridEmailService,
+    FirebaseMessagingService,
+  ],
   controllers: [NotificationController],
 })
 export class NotificationModule {}

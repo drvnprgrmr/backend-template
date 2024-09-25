@@ -17,7 +17,7 @@ export class UserService {
 
   constructor(
     @InjectModel(User.name)
-    readonly userModel: Model<User, object, UserMethods>,
+    readonly userModel: Model<User, object, UserMethods, { fullName: string }>,
     private readonly jwtService: JwtService,
     private readonly awsS3Service: AwsS3Service,
   ) {}

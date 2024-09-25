@@ -1,4 +1,68 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, Types } from 'mongoose';
+import { UserService } from 'src/user/user.service';
+import { Notification } from './schemas/notification.schema';
+import { CreateNotificationDto } from './dto/create-notification.dto';
+import { UserNotFoundException } from 'src/user/exceptions';
+import {
+  FirebaseMessagingService,
+  SendgridEmailService,
+  SendgridEmailTemplate,
+} from 'src/common/services';
 
 @Injectable()
-export class NotificationService {}
+export class NotificationService {
+  private readonly logger: Logger = new Logger(NotificationService.name);
+
+  constructor(
+    @InjectModel(Notification.name)
+    private readonly notificationModel: Model<Notification>,
+    private readonly userService: UserService,
+    private readonly firebaseMessagingService: FirebaseMessagingService,
+    private readonly sendgridEmailService: SendgridEmailService,
+  ) {}
+
+  async createNotification(
+    dto: CreateNotificationDto,
+    { sendEmail = false, sendPush = false },
+  ) {
+    const { userId, title, body, image, type, payload } = dto;
+
+    const user = await this.userService.userModel.findById(userId).exec();
+
+    if (!user) throw new UserNotFoundException();
+
+    const notification = await this.notificationModel.create({
+      user: userId,
+      title,
+      body,
+      image,
+      type,
+      payload,
+    });
+
+    if (user.fcmToken && sendPush)
+      this.firebaseMessagingService.sendWithToken({
+        token: user.fcmToken,
+        title,
+        body,
+        image,
+        data: { ...payload, type },
+      });
+
+    if (sendEmail)
+      this.sendgridEmailService.sendFromTemplate({
+        to: user.email.value,
+        templateId: SendgridEmailTemplate.NEW_NOTIFICATION,
+        dynamicTemplateData: { name: user.username || user.fullName },
+      });
+
+    user.unreadNotifications++;
+    await user.save();
+
+    return notification;
+  }
+
+  async getNotifications(userId: Types.ObjectId, ) {}
+}

@@ -42,6 +42,12 @@ export class User {
 
   @Prop({ type: Wallet })
   wallet?: Wallet;
+
+  @Prop()
+  fcmToken?: string;
+
+  @Prop({ type: Number, min: 0, default: 0 })
+  unreadNotifications?: number;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

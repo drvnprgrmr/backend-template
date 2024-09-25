@@ -1,11 +1,14 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { isURL } from 'class-validator';
 import { Types, HydratedDocument, SchemaTypes } from 'mongoose';
 import { User } from 'src/user/schemas/user.schema';
 
 export type NotificationDocument = HydratedDocument<Notification>;
 
 // add based on application needs
-export enum NotificationType {}
+export enum NotificationType {
+  _ = '_',
+}
 
 export enum NotificationStatus {
   UNREAD = 'unread',
@@ -28,6 +31,9 @@ export class Notification {
   @Prop({ type: String, required: true })
   body: string;
 
+  @Prop({ type: String, validate: (v: string) => isURL(v) })
+  image?: string;
+
   @Prop({
     type: String,
     required: true,
@@ -40,7 +46,7 @@ export class Notification {
   type: NotificationType;
 
   @Prop({ type: SchemaTypes.Mixed })
-  payload?: Record<string, unknown>;
+  payload?: Record<string, string>;
 
   @Prop({ type: Boolean, required: true, default: false })
   keep: boolean;
