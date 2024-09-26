@@ -2,7 +2,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { UserService } from 'src/user/user.service';
-import { Notification } from './schemas/notification.schema';
+import {
+  Notification,
+  NotificationStatus,
+} from './schemas/notification.schema';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { UserNotFoundException } from 'src/user/exceptions';
 import {
@@ -10,6 +13,8 @@ import {
   SendgridEmailService,
   SendgridEmailTemplate,
 } from 'src/common/services';
+import { GetNotificationsDto } from './dto/get-notifications.dto';
+import { FilterQuery } from 'mongoose';
 
 @Injectable()
 export class NotificationService {
@@ -64,5 +69,38 @@ export class NotificationService {
     return notification;
   }
 
-  async getNotifications(userId: Types.ObjectId, ) {}
+  async getNotifications(userId: Types.ObjectId, dto: GetNotificationsDto) {
+    const { status, lastCreatedAt } = dto;
+
+    const filter: FilterQuery<Notification> = { user: userId };
+
+    status && (filter.status = status);
+    lastCreatedAt && (filter.createdAt = { $lt: lastCreatedAt });
+
+    const notifications = await this.notificationModel
+      .find(filter)
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .lean()
+      .exec();
+
+    await this.notificationModel
+      .updateMany(
+        {
+          user: userId,
+          status: NotificationStatus.UNREAD,
+        },
+        { $set: { status: NotificationStatus.READ } },
+      )
+      .exec();
+
+    await this.userService.userModel
+      .updateOne({ _id: userId }, { $set: { unreadNotifications: 0 } })
+      .exec();
+
+    return {
+      message: 'Notifications fetched successfully!',
+      data: { notifications },
+    };
+  }
 }
