@@ -30,7 +30,14 @@ export class SendgridEmailService {
     try {
       await sgMail.send(mail);
     } catch (err) {
-      this.logger.error(`Error sending email to ${mail.to}`, err);
+      const sgErrors: {
+        message: string;
+        field: string;
+        help: string | null;
+      }[] = err.response?.body?.errors;
+
+      sgErrors && sgErrors.forEach((sgError) => this.logger.error(sgError));
+
       throw err;
     }
   }
