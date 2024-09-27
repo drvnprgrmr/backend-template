@@ -70,9 +70,9 @@ export class NotificationService {
   }
 
   async getNotifications(userId: Types.ObjectId, dto: GetNotificationsDto) {
-    const { status, lastCreatedAt } = dto;
+    const { status, lastCreatedAt, limit, keep } = dto;
 
-    const filter: FilterQuery<Notification> = { user: userId };
+    const filter: FilterQuery<Notification> = { user: userId, keep };
 
     status && (filter.status = status);
     lastCreatedAt && (filter.createdAt = { $lt: lastCreatedAt });
@@ -80,7 +80,7 @@ export class NotificationService {
     const notifications = await this.notificationModel
       .find(filter)
       .sort({ createdAt: -1 })
-      .limit(50)
+      .limit(limit)
       .lean()
       .exec();
 

@@ -2,7 +2,7 @@ import {
   IsBooleanString,
   IsDate,
   IsEnum,
-  IsNumberString,
+  IsNumber,
   IsOptional,
 } from 'class-validator';
 import { NotificationStatus } from '../schemas/notification.schema';
@@ -17,7 +17,8 @@ export class GetNotificationsDto {
   @IsOptional()
   keep?: boolean;
 
-  @IsNumberString()
+  @IsNumber()
+  @Type(() => Number)
   @IsOptional()
   limit?: number = 20;
 
