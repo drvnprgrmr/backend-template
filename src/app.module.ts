@@ -11,7 +11,7 @@ import { UserModule } from './user/user.module';
 import { JwtModule } from '@nestjs/jwt';
 import { NotificationModule } from './notification/notification.module';
 import { ChatModule } from './chat/chat.module';
-import { AppGateway } from './app/app.gateway';
+// import { AppGateway } from './app/app.gateway';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
@@ -68,7 +68,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     ChatModule,
   ],
   controllers: [AppController],
-  providers: [AppService, AppGateway],
+  providers: [AppService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
