@@ -10,9 +10,17 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { UserModule } from './user/user.module';
 import { JwtModule } from '@nestjs/jwt';
 import { NotificationModule } from './notification/notification.module';
+import { ChatModule } from './chat/chat.module';
+import { AppGateway } from './app/app.gateway';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
+    EventEmitterModule.forRoot({
+      wildcard: true,
+      delimiter: ':',
+      verboseMemoryLeak: true,
+    }),
     ThrottlerModule.forRoot({
       throttlers: [
         { name: 'l0', limit: 4, ttl: 60 * 1_000 },
@@ -57,9 +65,10 @@ import { NotificationModule } from './notification/notification.module';
     }),
     UserModule,
     NotificationModule,
+    ChatModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, AppGateway],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
