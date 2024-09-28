@@ -1,6 +1,8 @@
-import { Prop, Schema } from '@nestjs/mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { isUUID } from 'class-validator';
-import { SchemaTypes, Types } from 'mongoose';
+import { HydratedDocument, SchemaTypes, Types } from 'mongoose';
+
+export type PersonalChatMessageDocument = HydratedDocument<PersonalChatMessage>;
 
 @Schema({ timestamps: true })
 export class PersonalChatMessage {
@@ -25,3 +27,6 @@ export class PersonalChatMessage {
   @Prop({ type: SchemaTypes.Boolean, required: true, default: false })
   isStarred: boolean;
 }
+
+export const PersonalChatMessageSchema =
+  SchemaFactory.createForClass(PersonalChatMessage);
