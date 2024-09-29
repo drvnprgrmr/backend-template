@@ -13,6 +13,7 @@ import { NotificationModule } from './notification/notification.module';
 import { ChatModule } from './chat/chat.module';
 // import { AppGateway } from './app/app.gateway';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { BlogModule } from './blog/blog.module';
 
 @Module({
   imports: [
@@ -66,6 +67,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     UserModule,
     NotificationModule,
     ChatModule,
+    BlogModule,
   ],
   controllers: [AppController],
   providers: [AppService],
