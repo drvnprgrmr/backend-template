@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
-import { BlogPost } from './schemas/blog-post.schema';
+import { FilterQuery, Model, Types } from 'mongoose';
+import { BlogPost, BlogPostStatus } from './schemas/blog-post.schema';
 import { CreateBlogPostDto } from './dto/create-blog-post.dto';
-import { GetBlogPostsDto } from './dto/get-blog-posts.dto';
+import { GetPublishedBlogPostsDto } from './dto/get-published-blog-posts.dto';
+import { GetUserBlogPostsDto } from './dto/get-user-blog-posts.dto';
 
 @Injectable()
 export class BlogService {
@@ -12,12 +13,52 @@ export class BlogService {
   ) {}
 
   async createBlogPost(userId: Types.ObjectId, dto: CreateBlogPostDto) {
-    const blog = await this.blogPostModel.create({ user: userId, ...dto });
+    const blogPost = await this.blogPostModel.create({ user: userId, ...dto });
 
-    return { message: 'Blog created successfully!', data: { blog } };
+    return { message: 'Blog post created successfully!', data: { blogPost } };
   }
 
-  async getBlogPosts(dto: GetBlogPostsDto) {}
+  async getPublishedBlogPosts(dto: GetPublishedBlogPostsDto) {
+    const { userId, q } = dto;
 
-  async getBlogPost(id: Types.ObjectId) {}
+    const filter: FilterQuery<BlogPost> = {
+      $and: [
+        {
+          status: BlogPostStatus.PUBLISHED,
+        },
+      ],
+    };
+
+    if (userId) filter.$and.push({ user: userId });
+    if (q) filter.$and.push({ $or: [{ title: { $regex: q, $options: 'i' } }] });
+
+    const blogPosts = await this.blogPostModel
+      .find(filter)
+      .sort('-createdAt')
+      .populate('user', 'name')
+      .lean()
+      .exec();
+
+    return {
+      message: 'Published blog posts fetched!',
+      data: { blogPosts },
+    };
+  }
+
+  async getUserBlogPosts(userId: Types.ObjectId, dto: GetUserBlogPostsDto) {
+    const { q, status } = dto;
+
+    const filter: FilterQuery<BlogPost> = { $and: [{ user: userId }] };
+
+    if (q) filter.$and.push({ $or: [{ title: { $regex: q, $options: 'i' } }] });
+    if (status) filter.$and.push({ status });
+
+    const blogPosts = await this.blogPostModel
+      .find(filter)
+      .sort('-updatedAt')
+      .lean()
+      .exec();
+
+    return { message: "User's blog posts fetched!", data: { blogPosts } };
+  }
 }
