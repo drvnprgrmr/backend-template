@@ -1,8 +1,11 @@
 import {
+  applyDecorators,
   BadRequestException,
   createParamDecorator,
   ExecutionContext,
 } from '@nestjs/common';
+import { Transform } from 'class-transformer';
+import { IsMongoId } from 'class-validator';
 import { Request } from 'express';
 import { isValidObjectId, Types } from 'mongoose';
 
@@ -20,3 +23,13 @@ export const ObjectId = createParamDecorator(
     return new Types.ObjectId(param);
   },
 );
+
+export function ToObjectId() {
+  return applyDecorators(
+    Transform((params) => {
+      const value: string = params.value;
+      return new Types.ObjectId(value);
+    }),
+    IsMongoId(),
+  );
+}

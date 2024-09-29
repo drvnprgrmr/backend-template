@@ -20,7 +20,12 @@ export class BlogPost {
   @Prop({ type: String, required: true })
   body: string;
 
-  @Prop({ type: String, required: true, enum: BlogPostStatus })
+  @Prop({
+    type: String,
+    required: true,
+    enum: BlogPostStatus,
+    default: BlogPostStatus.DRAFT,
+  })
   status: BlogPostStatus;
 
   @Prop()
