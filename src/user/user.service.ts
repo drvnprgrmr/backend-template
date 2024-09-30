@@ -21,6 +21,7 @@ import {
 import { UpdateUserDto } from './dto/update-user.dto';
 import { GetUsersDto } from './dto/get-users.dto';
 import { SendOtpDto } from './dto/send-otp.dto';
+import { VerifyEmailDto } from './dto/verify-email.dto';
 
 @Injectable()
 export class UserService {
@@ -108,6 +109,29 @@ export class UserService {
     });
 
     return { message: 'OTP sent!' };
+  }
+
+  async verifyEmail(dto: VerifyEmailDto) {
+    const { email, otp } = dto;
+
+    const user = await this.userModel.findOne({ 'email.value': email }).exec();
+
+    if (!user) throw new UserNotFoundException();
+
+    if (user.get('email.verified'))
+      throw new BadRequestException({ message: 'Email already verified.' });
+
+    const isValid = await user.verifyNonce(otp);
+
+    if (isValid === 'expired')
+      throw new BadRequestException({ message: 'OTP has expired.' });
+
+    if (!isValid) throw new BadRequestException({ message: 'OTP is invalid' });
+
+    user.set('email.verified', true);
+    await user.save();
+
+    return { message: 'Email verified!' };
   }
 
   async getUserProfile(userId: Types.ObjectId) {
