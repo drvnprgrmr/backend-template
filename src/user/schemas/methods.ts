@@ -10,8 +10,8 @@ type VerifyHash = (
 
 type GenerateNonce = (
   this: UserDocument,
-  length: number,
-  expiresIn: number,
+  length?: number,
+  expiresIn?: number,
 ) => Promise<string>;
 
 type VerifyNonce = (
@@ -31,7 +31,7 @@ const verifyHash: VerifyHash = async function (path, plain) {
 
 const generateNonce: GenerateNonce = async function (
   length = 6,
-  expiresIn = 15 * 60 * 1_000,
+  expiresIn = 10 * 60 * 1_000,
 ) {
   const nonce = crypto.randomBytes(length).toString('hex').slice(0, length);
 

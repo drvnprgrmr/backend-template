@@ -8,13 +8,19 @@ import { User, UserVisibility } from './schemas/user.schema';
 import { UserMethods } from './schemas/methods';
 import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
-import { AwsS3Service } from 'src/common/services';
+import {
+  AwsS3Service,
+  SendgridEmailAddress,
+  SendgridEmailService,
+  SendgridEmailTemplate,
+} from 'src/common/services';
 import {
   UserAlreadyExistsException,
   UserNotFoundException,
 } from './exceptions';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { GetUsersDto } from './dto/get-users.dto';
+import { SendOtpDto } from './dto/send-otp.dto';
 
 @Injectable()
 export class UserService {
@@ -25,7 +31,11 @@ export class UserService {
     readonly userModel: Model<User, object, UserMethods, { fullName: string }>,
     private readonly jwtService: JwtService,
     private readonly awsS3Service: AwsS3Service,
+    private readonly sendgridEmailService: SendgridEmailService,
   ) {}
+
+  // note: write admin module first
+  async getAllUsers() {}
 
   async getUsers(dto: GetUsersDto) {
     const { q } = dto;
@@ -79,6 +89,25 @@ export class UserService {
     const token = await this.jwtService.signAsync({ sub: user.id });
 
     return { message: 'User login successful!', data: { user, token } };
+  }
+
+  async sendOtp(dto: SendOtpDto) {
+    const { email } = dto;
+
+    const user = await this.userModel.findOne({ 'email.value': email }).exec();
+
+    if (!user) throw new UserNotFoundException();
+
+    const otp = await user.generateNonce();
+
+    await this.sendgridEmailService.sendFromTemplate({
+      from: SendgridEmailAddress.TEST,
+      to: email,
+      templateId: SendgridEmailTemplate.TEST,
+      dynamicTemplateData: { name: user.fullName || user.username, otp },
+    });
+
+    return { message: 'OTP sent!' };
   }
 
   async getUserProfile(userId: Types.ObjectId) {

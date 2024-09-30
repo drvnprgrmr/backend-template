@@ -1,15 +1,7 @@
 import { PreMiddlewareFunction, PreSaveMiddlewareFunction } from 'mongoose';
 import { UserDocument } from './user.schema';
 import * as bcrypt from 'bcrypt';
-import * as crypto from 'node:crypto';
-
-function randomNumbers(length: number = 10) {
-  const numbers = [];
-
-  for (let i = 0; i < length; i++) numbers.push(crypto.randomInt(10));
-
-  return numbers.join('');
-}
+import { randomNumbers } from 'src/common/utils';
 
 export const preSave: PreSaveMiddlewareFunction<UserDocument> = async function (
   next,

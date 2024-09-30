@@ -5,7 +5,11 @@ import { User, UserSchema } from './schemas/user.schema';
 import { preSave, preValidate } from './schemas/middleware';
 import { userMethods } from './schemas/methods';
 import { UserController } from './user.controller';
-import { AwsCloudfrontService, AwsS3Service } from 'src/common/services';
+import {
+  AwsCloudfrontService,
+  AwsS3Service,
+  SendgridEmailService,
+} from 'src/common/services';
 import { MulterModule } from '@nestjs/platform-express';
 import { TMP_DIR } from 'src/config';
 
@@ -35,7 +39,12 @@ import { TMP_DIR } from 'src/config';
       },
     ]),
   ],
-  providers: [UserService, AwsS3Service, AwsCloudfrontService],
+  providers: [
+    UserService,
+    AwsS3Service,
+    AwsCloudfrontService,
+    SendgridEmailService,
+  ],
   exports: [UserService],
   controllers: [UserController],
 })

@@ -22,6 +22,7 @@ import { Types } from 'mongoose';
 import { ObjectId } from 'src/common/decorators';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { GetUsersDto } from './dto/get-users.dto';
+import { SendOtpDto } from './dto/send-otp.dto';
 
 @Controller('/user')
 export class UserController {
@@ -55,6 +56,12 @@ export class UserController {
   @Patch('/me')
   updateUser(@Req() req: UserPopulatedRequest, @Body() body: UpdateUserDto) {
     return this.userService.updateUser(req.user.id, body);
+  }
+
+  @UseGuards(ThrottlerGuard)
+  @Get('/otp')
+  sendOtp(@Query() query: SendOtpDto) {
+    return this.userService.sendOtp(query);
   }
 
   @Get('/:id')
