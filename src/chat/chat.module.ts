@@ -9,9 +9,12 @@ import {
   PersonalChatMessage,
   PersonalChatMessageSchema,
 } from './schemas/personal-chat-message.schema';
+import { ChatController } from './chat.controller';
+import { UserModule } from 'src/user/user.module';
 
 @Module({
   imports: [
+    UserModule,
     MongooseModule.forFeatureAsync([
       {
         name: PersonalChat.name,
@@ -32,5 +35,6 @@ import {
     ]),
   ],
   providers: [ChatService],
+  controllers: [ChatController],
 })
 export class ChatModule {}

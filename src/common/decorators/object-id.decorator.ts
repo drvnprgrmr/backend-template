@@ -5,7 +5,7 @@ import {
   ExecutionContext,
 } from '@nestjs/common';
 import { Transform } from 'class-transformer';
-import { IsMongoId } from 'class-validator';
+import { IsInstance } from 'class-validator';
 import { Request } from 'express';
 import { isValidObjectId, Types } from 'mongoose';
 
@@ -28,8 +28,12 @@ export function ToObjectId() {
   return applyDecorators(
     Transform((params) => {
       const value: string = params.value;
+
+      if (!isValidObjectId(value))
+        throw new BadRequestException({ message: 'Invalid ObjectId.' });
+
       return new Types.ObjectId(value);
     }),
-    IsMongoId(),
+    IsInstance(Types.ObjectId),
   );
 }
