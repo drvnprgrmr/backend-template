@@ -10,11 +10,13 @@ export enum SendgridEmailTemplate {
   EMAIL_VERIFICATION = 'd-1',
   RESET_PASSWORD = 'd-2',
   NEW_NOTIFICATION = 'd-3',
+  TEST = 'd-8f45af1aa8e64667989f11ea91577e60',
 }
 
 export enum SendgridEmailAddress {
   SUPPORT = 'support@example.com',
   NO_REPLY = 'noreply@example.com',
+  TEST = 'test@sphiderassweb.org',
 }
 
 @Injectable()
