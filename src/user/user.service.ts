@@ -1,10 +1,10 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { JwtService } from '@nestjs/jwt';
-import { Model, Types } from 'mongoose';
+import { FilterQuery, Model, Types } from 'mongoose';
 import * as crypto from 'node:crypto';
 
-import { User } from './schemas/user.schema';
+import { User, UserVisibility } from './schemas/user.schema';
 import { UserMethods } from './schemas/methods';
 import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
@@ -14,6 +14,7 @@ import {
   UserNotFoundException,
 } from './exceptions';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { GetUsersDto } from './dto/get-users.dto';
 
 @Injectable()
 export class UserService {
@@ -26,10 +27,26 @@ export class UserService {
     private readonly awsS3Service: AwsS3Service,
   ) {}
 
-  async getUsers() {
-    const users = await this.userModel.find().lean().exec();
+  async getUsers(dto: GetUsersDto) {
+    const { q } = dto;
 
-    return { message: 'User list fetched.', data: { users } };
+    const filter: FilterQuery<User> = { visibility: UserVisibility.PUBLIC };
+
+    if (q) {
+      filter.$or = [
+        { username: { $regex: q, $options: 'i' } },
+        { 'name.first': { $regex: q, $options: 'i' } },
+        { 'name.last': { $regex: q, $options: 'i' } },
+      ];
+    }
+
+    const users = await this.userModel
+      .find(filter)
+      .sort({ createdAt: 1 })
+      .lean()
+      .exec();
+
+    return { message: 'Users fetched.', data: { users } };
   }
 
   async signup(dto: SignupDto) {
@@ -93,7 +110,9 @@ export class UserService {
     )
       throw new UserAlreadyExistsException();
 
-    const result = await this.userModel.updateOne({ _id: userId }, dto).exec();
+    const result = await this.userModel
+      .updateOne({ _id: userId }, { $set: dto })
+      .exec();
 
     if (result.matchedCount < 1) throw new UserNotFoundException();
 

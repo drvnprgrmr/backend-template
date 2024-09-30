@@ -7,6 +7,11 @@ export type UserDocument = HydratedDocument<User>;
 
 // todo: add max and min length constants and add enforce in dtos
 
+export enum UserVisibility {
+  PUBLIC = 'public',
+  PRIVATE = 'private',
+}
+
 /**
  * All attributes are not required by default.
  * Modify to suit the app's requirements.
@@ -51,6 +56,14 @@ export class User {
 
   @Prop()
   fcmToken?: string;
+
+  @Prop({
+    type: String,
+    required: true,
+    enum: UserVisibility,
+    default: UserVisibility.PUBLIC,
+  })
+  visibility: UserVisibility;
 
   @Prop({ type: Number, min: 0, default: 0 })
   unreadNotifications?: number;

@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Patch,
   Post,
+  Query,
   Req,
   UploadedFiles,
   UseGuards,
@@ -20,14 +21,15 @@ import { UserGuard, UserPopulatedRequest } from './user.guard';
 import { Types } from 'mongoose';
 import { ObjectId } from 'src/common/decorators';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { GetUsersDto } from './dto/get-users.dto';
 
 @Controller('/user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get()
-  getUsers() {
-    return this.userService.getUsers();
+  getUsers(@Query() query: GetUsersDto) {
+    return this.userService.getUsers(query);
   }
 
   @UseGuards(ThrottlerGuard)
