@@ -7,6 +7,7 @@ import {
 } from 'class-validator';
 import { EmailValidator, TitleValidator } from 'src/common/decorators';
 import { Gender } from 'src/common/enums';
+import { UserVisibility } from '../schemas/user.schema';
 
 export class UpdateUserDto {
   @IsString()
@@ -40,4 +41,8 @@ export class UpdateUserDto {
   @IsDateString()
   @IsOptional()
   birthday?: Date;
+
+  @IsEnum(UserVisibility)
+  @IsOptional()
+  visibility?: UserVisibility;
 }
