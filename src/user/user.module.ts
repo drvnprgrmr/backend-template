@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { UserService } from './user.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from './schemas/user.schema';
-import { preSave } from './schemas/middleware';
+import { preSave, preValidate } from './schemas/middleware';
 import { userMethods } from './schemas/methods';
 import { UserController } from './user.controller';
 import { AwsCloudfrontService, AwsS3Service } from 'src/common/services';
@@ -28,6 +28,7 @@ import { TMP_DIR } from 'src/config';
           });
 
           schema.pre('save', preSave);
+          schema.pre('validate', preValidate);
 
           return schema;
         },

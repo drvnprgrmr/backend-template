@@ -22,6 +22,9 @@
   <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
   [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
+# Notes
+- when the same type of error is sent more than once, create an exception class for it
+
 ## Description
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.

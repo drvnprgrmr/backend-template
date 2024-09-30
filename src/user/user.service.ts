@@ -9,7 +9,11 @@ import { UserMethods } from './schemas/methods';
 import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
 import { AwsS3Service } from 'src/common/services';
-import { UserNotFoundException } from './exceptions';
+import {
+  UserAlreadyExistsException,
+  UserNotFoundException,
+} from './exceptions';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UserService {
@@ -38,7 +42,7 @@ export class UserService {
       })
       .exec();
 
-    if (user) throw new BadRequestException('User already exists!');
+    if (user) throw new UserAlreadyExistsException();
 
     user = await this.userModel.create(dto);
 
@@ -60,7 +64,15 @@ export class UserService {
     return { message: 'User login successful!', data: { user, token } };
   }
 
-  async getUserProfile(dto) {}
+  async getUserProfile(userId: Types.ObjectId) {
+    const user = await this.userModel
+      .findById(userId)
+      .select('-password')
+      .lean()
+      .exec();
+
+    return { message: 'User profile fetched!', data: { user } };
+  }
 
   async getPublicProfile(userId: Types.ObjectId) {
     const user = await this.userModel
@@ -74,7 +86,19 @@ export class UserService {
     return { message: 'User data fetched!', data: { user } };
   }
 
-  async updateUser(userId: Types.ObjectId, dto) {}
+  async updateUser(userId: Types.ObjectId, dto: UpdateUserDto) {
+    if (
+      dto['username'] &&
+      (await this.userModel.findOne({ username: dto['username'] }).exec())
+    )
+      throw new UserAlreadyExistsException();
+
+    const result = await this.userModel.updateOne({ _id: userId }, dto).exec();
+
+    if (result.matchedCount < 1) throw new UserNotFoundException();
+
+    return { message: 'User updated!' };
+  }
 
   async upload(userId: Types.ObjectId, files: Express.Multer.File[]) {
     if (files.length === 0)

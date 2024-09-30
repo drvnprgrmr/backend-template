@@ -1,4 +1,4 @@
-import { PreSaveMiddlewareFunction } from 'mongoose';
+import { PreMiddlewareFunction, PreSaveMiddlewareFunction } from 'mongoose';
 import { UserDocument } from './user.schema';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'node:crypto';
@@ -22,10 +22,15 @@ export const preSave: PreSaveMiddlewareFunction<UserDocument> = async function (
         this.set(path, await bcrypt.hash(this.get(path), 10));
     }
 
-    if (!this.get('username')) this.set('username', `user${randomNumbers()}`);
-
     next();
   } catch (err) {
     next(err);
   }
 };
+
+export const preValidate: PreMiddlewareFunction<UserDocument> =
+  async function () {
+    if (this.isNew) {
+      if (!this.get('username')) this.set('username', `user${randomNumbers()}`);
+    }
+  };
