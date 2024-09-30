@@ -13,8 +13,14 @@ export type UserDocument = HydratedDocument<User>;
  */
 @Schema({ timestamps: true })
 export class User {
-  @Prop({ type: String, trim: true, lowercase: true, unique: true })
-  username?: string;
+  @Prop({
+    type: String,
+    required: true,
+    trim: true,
+    lowercase: true,
+    unique: true,
+  })
+  username: string;
 
   @Prop({ type: Name })
   name?: Name;
@@ -48,6 +54,8 @@ export class User {
 
   @Prop({ type: Number, min: 0, default: 0 })
   unreadNotifications?: number;
+
+  // todo: isSocketOnline
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
