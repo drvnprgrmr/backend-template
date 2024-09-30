@@ -1,6 +1,7 @@
 import { UserDocument } from './user.schema';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'node:crypto';
+import { randomNumbers } from 'src/common/utils';
 
 type VerifyHash = (
   this: UserDocument,
@@ -33,7 +34,7 @@ const generateNonce: GenerateNonce = async function (
   length = 6,
   expiresIn = 10 * 60 * 1_000,
 ) {
-  const nonce = crypto.randomBytes(length).toString('hex').slice(0, length);
+  const nonce = randomNumbers(length);
 
   this.nonce = {
     value: await bcrypt.hash(nonce, 10),
