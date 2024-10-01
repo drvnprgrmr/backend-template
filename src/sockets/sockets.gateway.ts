@@ -12,6 +12,11 @@ import { DefaultEventsMap, Server, Socket } from 'socket.io';
 import { UserService } from 'src/user/user.service';
 import { JwtService } from '@nestjs/jwt';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Types } from 'mongoose';
+
+export interface SocketData {
+  user: { id: Types.ObjectId };
+}
 
 @WebSocketGateway({ cors: { origin: '*' } })
 export class SocketsGateway
@@ -78,11 +83,13 @@ export class SocketsGateway
 
     if (!user.email.verified) disconnect("User's email is not verified!");
 
-    socket.data.user = { id: user.id };
+    socket.data.user = { id: user._id };
 
     await socket.join(user.id);
 
-    socket.onAny((event, data) => this.eventEmitter.emit(event, data));
+    socket.onAny((event, data) =>
+      this.eventEmitter.emit(event, socket.data, data),
+    );
 
     this.logger.verbose('Client connected.', {
       user: user.id,

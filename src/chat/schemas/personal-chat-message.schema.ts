@@ -6,11 +6,11 @@ export type PersonalChatMessageDocument = HydratedDocument<PersonalChatMessage>;
 
 @Schema({ timestamps: true })
 export class PersonalChatMessage {
-  @Prop({ type: SchemaTypes.ObjectId, ref: 'PersonalChat', required: true })
-  from: Types.ObjectId;
+  @Prop({ type: SchemaTypes.ObjectId, ref: 'User', required: true })
+  user: Types.ObjectId;
 
-  @Prop({ type: SchemaTypes.ObjectId, ref: 'PersonalChat', required: true })
-  to: Types.ObjectId;
+  @Prop({ type: SchemaTypes.ObjectId, ref: 'User', required: true })
+  participant: Types.ObjectId;
 
   @Prop({ type: SchemaTypes.String, default: '' })
   message: string;
@@ -19,7 +19,7 @@ export class PersonalChatMessage {
   attachment?: string;
 
   @Prop({ type: SchemaTypes.ObjectId, ref: 'PersonalChatMessage' })
-  replyTo: Types.ObjectId;
+  replyTo?: Types.ObjectId;
 
   @Prop({ type: SchemaTypes.Boolean, required: true, default: false })
   isRead: boolean;

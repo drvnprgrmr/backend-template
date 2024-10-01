@@ -1,17 +1,23 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { PersonalChat } from './schemas/personal-chat.schema';
-import { Model, Types } from 'mongoose';
+import { isValidObjectId, Model, Types } from 'mongoose';
 import { PersonalChatMessage } from './schemas/personal-chat-message.schema';
 import { CreatePersonalChatDto } from './dto/create-personal-chat.dto';
+import { OnEvent } from '@nestjs/event-emitter';
+import { SocketData } from 'src/sockets/sockets.gateway';
+import { UserService } from 'src/user/user.service';
 
 @Injectable()
 export class ChatService {
+  private readonly logger = new Logger(ChatService.name);
+
   constructor(
     @InjectModel(PersonalChat.name)
     private readonly personalChatModel: Model<PersonalChat>,
     @InjectModel(PersonalChatMessage.name)
     private readonly personalChatMessageModel: Model<PersonalChatMessage>,
+    private readonly userService: UserService,
   ) {}
 
   async createPersonalChat(userId: Types.ObjectId, dto: CreatePersonalChatDto) {
@@ -63,5 +69,35 @@ export class ChatService {
     });
 
     return { message: 'Personal chat created!', data: { userPersonalChat } };
+  }
+
+  @OnEvent('chat:personal:message:create')
+  async createPersonalChatMessage(
+    socketData: SocketData,
+    data: {
+      to: string;
+      message: string;
+    },
+  ) {
+    const userId = socketData.user.id;
+    const { to, message } = data;
+
+    if (!isValidObjectId(to)) return this.logger.error('Invalid ObjectId.');
+
+    const participantId = new Types.ObjectId(to);
+
+    const user = await this.userService.userModel.findById(userId).exec();
+
+    const particapantPersonalChat = await this.personalChatModel
+      .findOne({
+        user: participantId,
+        participant: userId,
+      })
+      .exec();
+
+    const personalChatMessage = await this.personalChatMessageModel.create({
+      user: userId,
+      participant: participantId,
+    });
   }
 }

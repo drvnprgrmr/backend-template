@@ -6,6 +6,7 @@ import {
   IsPhoneNumber,
   IsString,
   IsStrongPassword,
+  Matches,
 } from 'class-validator';
 import { EmailValidator, TitleValidator } from 'src/common/decorators';
 import { Gender } from 'src/common/enums';
@@ -15,7 +16,7 @@ import { Gender } from 'src/common/enums';
  * Modify to suit the app's requirements.
  */
 export class SignupDto {
-  @IsString()
+  @Matches(/^\w{3,60}$/)
   @IsOptional()
   username?: string;
 
