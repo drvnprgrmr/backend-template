@@ -9,12 +9,6 @@ import { UserMethods } from './schemas/methods';
 import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
 import {
-  AwsS3Service,
-  SendgridEmailAddress,
-  SendgridEmailService,
-  SendgridEmailTemplate,
-} from 'src/common/services';
-import {
   UserAlreadyExistsException,
   UserNotFoundException,
 } from './exceptions';
@@ -22,6 +16,12 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { GetUsersDto } from './dto/get-users.dto';
 import { SendOtpDto } from './dto/send-otp.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
+import { AwsS3Service } from 'src/aws/aws-s3/aws-s3.service';
+import {
+  SendgridEmailAddress,
+  SendgridEmailService,
+  SendgridEmailTemplate,
+} from 'src/sendgrid/sendgrid-email/sendgrid-email.service';
 
 @Injectable()
 export class UserService {

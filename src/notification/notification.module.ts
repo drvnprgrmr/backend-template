@@ -7,11 +7,13 @@ import {
   NotificationSchema,
 } from './schemas/notification.schema';
 import { UserModule } from 'src/user/user.module';
-import { SendgridEmailService } from 'src/common/services/sendgrid-email.service';
-import { FirebaseMessagingService } from 'src/common/services';
+import { SendgridEmailModule } from 'src/sendgrid/sendgrid-email/sendgrid-email.module';
+import { FirebaseMessagingModule } from 'src/firebase/firebase-messaging/firebase-messaging.module';
 
 @Module({
   imports: [
+    FirebaseMessagingModule,
+    SendgridEmailModule,
     UserModule,
     MongooseModule.forFeatureAsync([
       {
@@ -29,11 +31,7 @@ import { FirebaseMessagingService } from 'src/common/services';
       },
     ]),
   ],
-  providers: [
-    NotificationService,
-    SendgridEmailService,
-    FirebaseMessagingService,
-  ],
+  providers: [NotificationService],
   controllers: [NotificationController],
 })
 export class NotificationModule {}

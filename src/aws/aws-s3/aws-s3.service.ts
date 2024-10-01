@@ -6,8 +6,8 @@ import { Upload } from '@aws-sdk/lib-storage';
 
 import * as fs from 'node:fs/promises';
 import { ReadStream } from 'fs';
-import { AwsCloudfrontService } from './aws-cloudfront.service';
 import { AwsConfig, Config } from 'src/config';
+import { AwsCloudfrontService } from '../aws-cloudfront/aws-cloudfront.service';
 
 export interface UploadFileOptions {
   path: string;

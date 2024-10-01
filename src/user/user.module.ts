@@ -5,16 +5,17 @@ import { User, UserSchema } from './schemas/user.schema';
 import { preSave, preValidate } from './schemas/middleware';
 import { userMethods } from './schemas/methods';
 import { UserController } from './user.controller';
-import {
-  AwsCloudfrontService,
-  AwsS3Service,
-  SendgridEmailService,
-} from 'src/common/services';
 import { MulterModule } from '@nestjs/platform-express';
 import { TMP_DIR } from 'src/config';
+import { AwsCloudfrontModule } from 'src/aws/aws-cloudfront/aws-cloudfront.module';
+import { AwsS3Module } from 'src/aws/aws-s3/aws-s3.module';
+import { SendgridEmailModule } from 'src/sendgrid/sendgrid-email/sendgrid-email.module';
 
 @Module({
   imports: [
+    SendgridEmailModule,
+    AwsS3Module,
+    AwsCloudfrontModule,
     MulterModule.register({
       dest: TMP_DIR,
       limits: { fileSize: 25 * 1_000_000, files: 5 },
@@ -39,12 +40,7 @@ import { TMP_DIR } from 'src/config';
       },
     ]),
   ],
-  providers: [
-    UserService,
-    AwsS3Service,
-    AwsCloudfrontService,
-    SendgridEmailService,
-  ],
+  providers: [UserService],
   exports: [UserService],
   controllers: [UserController],
 })

@@ -8,17 +8,17 @@ import {
 } from './schemas/notification.schema';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { UserNotFoundException } from 'src/user/exceptions';
-import {
-  FirebaseMessagingService,
-  SendgridEmailService,
-  SendgridEmailTemplate,
-} from 'src/common/services';
 import { GetNotificationsDto } from './dto/get-notifications.dto';
 import { FilterQuery } from 'mongoose';
+import {
+  SendgridEmailService,
+  SendgridEmailTemplate,
+} from 'src/sendgrid/sendgrid-email/sendgrid-email.service';
+import { FirebaseMessagingService } from 'src/firebase/firebase-messaging/firebase-messaging.service';
 
 @Injectable()
 export class NotificationService {
-  private readonly logger: Logger = new Logger(NotificationService.name);
+  private readonly logger = new Logger(NotificationService.name);
 
   constructor(
     @InjectModel(Notification.name)
