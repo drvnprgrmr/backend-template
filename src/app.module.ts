@@ -14,6 +14,7 @@ import { ChatModule } from './chat/chat.module';
 // import { AppGateway } from './app/app.gateway';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { BlogModule } from './blog/blog.module';
+import { SocketsModule } from './sockets/sockets.module';
 
 @Module({
   imports: [
@@ -68,6 +69,7 @@ import { BlogModule } from './blog/blog.module';
     NotificationModule,
     ChatModule,
     BlogModule,
+    SocketsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
