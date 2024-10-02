@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Patch,
   Post,
   Query,
   Req,
@@ -12,6 +13,7 @@ import { UserGuard, UserPopulatedRequest } from 'src/user/user.guard';
 import { CreateBlogPostDto } from './dto/create-blog-post.dto';
 import { GetPublishedBlogPostsDto } from './dto/get-published-blog-posts.dto';
 import { GetUserBlogPostsDto } from './dto/get-user-blog-posts.dto';
+import { UpdateBlogPostDto } from './dto/update-blog-post.dto';
 
 @Controller('/blog')
 export class BlogController {
@@ -24,6 +26,15 @@ export class BlogController {
     @Body() body: CreateBlogPostDto,
   ) {
     return this.blogService.createBlogPost(req.user.id, body);
+  }
+
+  @UseGuards(UserGuard)
+  @Patch('/post')
+  updateBlogPost(
+    @Req() req: UserPopulatedRequest,
+    @Body() body: UpdateBlogPostDto,
+  ) {
+    return this.blogService.updateBlogPost(req.user.id, body);
   }
 
   @Get('/post')

@@ -3,6 +3,8 @@
 
 # Todo
 - do more research on efficient text search for large collections
+- add throttler globally
+- create store for throttler (mongo or redis)
 
 # Getting started
 

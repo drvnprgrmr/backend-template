@@ -5,6 +5,11 @@ import { BlogPost, BlogPostStatus } from './schemas/blog-post.schema';
 import { CreateBlogPostDto } from './dto/create-blog-post.dto';
 import { GetPublishedBlogPostsDto } from './dto/get-published-blog-posts.dto';
 import { GetUserBlogPostsDto } from './dto/get-user-blog-posts.dto';
+import { UpdateBlogPostDto } from './dto/update-blog-post.dto';
+import {
+  BlogPostNotFoundException,
+  PathAlreadyExistsException,
+} from './exceptions';
 
 @Injectable()
 export class BlogService {
@@ -17,14 +22,36 @@ export class BlogService {
 
     if (!dto.path) blogPost.path = blogPost.id;
     else if (await this.blogPostModel.findOne({ path: dto.path }).exec())
-      throw new BadRequestException({ message: 'Path already exists!' });
+      throw new PathAlreadyExistsException();
 
     await blogPost.save();
 
-    return { message: 'Blog post created successfully!', data: { blogPost } };
+    return { message: 'Blog post created!', data: { blogPost } };
   }
 
-  async updateBlogPost(userId: Types.ObjectId, dto) {}
+  async updateBlogPost(userId: Types.ObjectId, dto: UpdateBlogPostDto) {
+    const { id, ...rest } = dto;
+    console.log(await this.blogPostModel.findOne({ path: dto.path }).exec());
+    if (
+      dto.path &&
+      (await this.blogPostModel.findOne({ path: dto.path }).exec())
+    )
+      throw new PathAlreadyExistsException();
+
+    const results = await this.blogPostModel
+      .updateOne(
+        {
+          user: userId,
+          _id: id,
+        },
+        { $set: rest },
+      )
+      .exec();
+
+    if (results.matchedCount < 1) throw new BlogPostNotFoundException();
+
+    return { message: 'Blog post updated!' };
+  }
 
   async getPublishedBlogPosts(dto: GetPublishedBlogPostsDto) {
     const { userId, q } = dto;
@@ -43,7 +70,7 @@ export class BlogService {
     const blogPosts = await this.blogPostModel
       .find(filter)
       .sort('-createdAt')
-      .populate('user', 'name')
+      .populate('user', '-_id name')
       .lean()
       .exec();
 
