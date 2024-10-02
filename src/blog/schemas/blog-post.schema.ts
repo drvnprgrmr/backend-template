@@ -14,6 +14,12 @@ export class BlogPost {
   @Prop({ type: SchemaTypes.ObjectId, ref: 'User', required: true })
   user: Types.ObjectId;
 
+  @Prop({ type: String, required: true, unique: true })
+  path: string;
+
+  // todo: thinking of storing only the uuid and adding method for getting the full url instead.
+  banner?: string;
+
   @Prop({ type: String, required: true })
   title: string;
 

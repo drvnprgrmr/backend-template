@@ -1,6 +1,11 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString, Matches } from 'class-validator';
+import { KebabCaseRegex } from 'src/common/regex';
 
 export class CreateBlogPostDto {
+  @Matches(KebabCaseRegex)
+  @IsOptional()
+  path?: string;
+
   @IsString()
   title: string;
 

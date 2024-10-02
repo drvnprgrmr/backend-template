@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, Types } from 'mongoose';
 import { BlogPost, BlogPostStatus } from './schemas/blog-post.schema';
@@ -13,10 +13,18 @@ export class BlogService {
   ) {}
 
   async createBlogPost(userId: Types.ObjectId, dto: CreateBlogPostDto) {
-    const blogPost = await this.blogPostModel.create({ user: userId, ...dto });
+    const blogPost = new this.blogPostModel({ user: userId, ...dto });
+
+    if (!dto.path) blogPost.path = blogPost.id;
+    else if (await this.blogPostModel.findOne({ path: dto.path }).exec())
+      throw new BadRequestException({ message: 'Path already exists!' });
+
+    await blogPost.save();
 
     return { message: 'Blog post created successfully!', data: { blogPost } };
   }
+
+  async updateBlogPost(userId: Types.ObjectId, dto) {}
 
   async getPublishedBlogPosts(dto: GetPublishedBlogPostsDto) {
     const { userId, q } = dto;
