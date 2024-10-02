@@ -74,7 +74,10 @@ export class UserService {
 
     user = await this.userModel.create(dto);
 
-    const token = await this.jwtService.signAsync({ sub: user.id });
+    const token = await this.jwtService.signAsync({
+      sub: user.id,
+      typ: 'user',
+    });
 
     return { message: 'User signup successful!', data: { user, token } };
   }
@@ -85,9 +88,12 @@ export class UserService {
       .exec();
 
     if (!user || !(await user.verifyHash('password', dto.password)))
-      throw new BadRequestException('Invalid credentials!');
+      throw new BadRequestException({ message: 'Invalid credentials!' });
 
-    const token = await this.jwtService.signAsync({ sub: user.id });
+    const token = await this.jwtService.signAsync({
+      sub: user.id,
+      typ: 'user',
+    });
 
     return { message: 'User login successful!', data: { user, token } };
   }

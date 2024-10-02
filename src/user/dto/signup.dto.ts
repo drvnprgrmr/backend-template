@@ -1,4 +1,3 @@
-import { Type } from 'class-transformer';
 import {
   IsDateString,
   IsEnum,
@@ -10,13 +9,14 @@ import {
 } from 'class-validator';
 import { EmailValidator, TitleValidator } from 'src/common/decorators';
 import { Gender } from 'src/common/enums';
+import { UsernameRegex } from 'src/common/regex';
 
 /**
  * All fields are made optional by default.
  * Modify to suit the app's requirements.
  */
 export class SignupDto {
-  @Matches(/^\w{3,60}$/)
+  @Matches(UsernameRegex)
   @IsOptional()
   username?: string;
 

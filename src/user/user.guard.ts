@@ -3,13 +3,13 @@ import {
   CanActivate,
   ExecutionContext,
   Injectable,
-  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { UserService } from './user.service';
 import { isValidObjectId, Types } from 'mongoose';
+import { UserNotFoundException } from './exceptions';
 
 export type UserPopulatedRequest = Request & { user: { id: Types.ObjectId } };
 
@@ -25,17 +25,18 @@ export class UserGuard implements CanActivate {
 
     const token = this.extractTokenFromHeader(request);
 
-    if (!token) throw new BadRequestException('Token not present!');
+    if (!token)
+      throw new BadRequestException({ message: 'Token not present!' });
 
-    let payload: { sub: string };
+    let payload: { sub: string; typ: string };
     try {
       payload = await this.jwtService.verifyAsync(token);
-    } catch {
-      throw new UnauthorizedException('Invalid token!');
-    }
 
-    if (!isValidObjectId(payload.sub))
-      throw new UnauthorizedException('Invalid token!');
+      if (!isValidObjectId(payload.sub) || payload.typ !== 'user')
+        throw new Error();
+    } catch {
+      throw new UnauthorizedException({ message: 'Invalid token!' });
+    }
 
     const user = await this.userService.userModel
       .findById(payload.sub)
@@ -43,7 +44,7 @@ export class UserGuard implements CanActivate {
       .lean()
       .exec();
 
-    if (!user) throw new NotFoundException('User not found!');
+    if (!user) throw new UserNotFoundException();
 
     request['user'] = { id: user._id };
 
