@@ -18,6 +18,10 @@ export class UpdateBlogPostDto {
 
   @IsString()
   @IsOptional()
+  preview?: string;
+
+  @IsString()
+  @IsOptional()
   body?: string;
 
   @IsEnum(BlogPostStatus)

@@ -10,6 +10,9 @@ export class CreateBlogPostDto {
   title: string;
 
   @IsString()
+  preview: string;
+
+  @IsString()
   body: string;
 
   @IsString({ each: true })

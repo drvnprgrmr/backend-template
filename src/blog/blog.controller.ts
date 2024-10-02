@@ -15,6 +15,8 @@ import { CreateBlogPostDto } from './dto/create-blog-post.dto';
 import { GetPublishedBlogPostsDto } from './dto/get-published-blog-posts.dto';
 import { GetUserBlogPostsDto } from './dto/get-user-blog-posts.dto';
 import { UpdateBlogPostDto } from './dto/update-blog-post.dto';
+import { ObjectId } from 'src/common/decorators';
+import { Types } from 'mongoose';
 
 @Controller('/blog')
 export class BlogController {
@@ -43,11 +45,6 @@ export class BlogController {
     return this.blogService.getPublishedBlogPosts(query);
   }
 
-  @Get('/post/:path')
-  getPublishedBlogPost(@Param('path') path: string) {
-    return this.blogService.getPublishedBlogPost(path);
-  }
-
   @UseGuards(UserGuard)
   @Get('/post/me')
   getUserBlogPosts(
@@ -55,5 +52,19 @@ export class BlogController {
     @Query() query: GetUserBlogPostsDto,
   ) {
     return this.blogService.getUserBlogPosts(req.user.id, query);
+  }
+
+  @Get('/post/:path')
+  getPublishedBlogPost(@Param('path') path: string) {
+    return this.blogService.getPublishedBlogPost(path);
+  }
+
+  @UseGuards(UserGuard)
+  @Get('/post/me/:id')
+  getUserBlogPost(
+    @Req() req: UserPopulatedRequest,
+    @ObjectId() id: Types.ObjectId,
+  ) {
+    return this.blogService.getUserBlogPost(req.user.id, id);
   }
 }

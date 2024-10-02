@@ -24,9 +24,15 @@ export class BlogPost {
   @Prop({ type: String, required: true })
   title: string;
 
-  // todo: add a preview field that contains max of 50 characters
+  // todo: add maxlength
+  @Prop({ type: String, required: true })
+  preview: string;
+
   @Prop({ type: String, required: true })
   body: string;
+
+  @Prop({ type: Number, required: true, min: 0, default: 0 })
+  reads: number;
 
   @Prop({
     type: String,

@@ -69,6 +69,7 @@ export class BlogService {
 
     const blogPosts = await this.blogPostModel
       .find(filter)
+      .select('-body -status')
       .sort('-createdAt')
       .populate('user', '-_id name')
       .lean()
@@ -81,12 +82,19 @@ export class BlogService {
   }
 
   async getPublishedBlogPost(path: string) {
-    const blogPost = await this.blogPostModel.findOne({
-      status: BlogPostStatus.PUBLISHED,
-      path,
-    });
+    const blogPost = await this.blogPostModel
+      .findOne({
+        status: BlogPostStatus.PUBLISHED,
+        path,
+      })
+      .select('-preview')
+      .exec();
 
     if (!blogPost) throw new BlogPostNotFoundException();
+
+    blogPost.reads++;
+
+    await blogPost.save();
 
     return { message: 'Blog post fetched!', data: { blogPost } };
   }
@@ -106,5 +114,16 @@ export class BlogService {
       .exec();
 
     return { message: "User's blog posts fetched!", data: { blogPosts } };
+  }
+
+  async getUserBlogPost(userId: Types.ObjectId, id: Types.ObjectId) {
+    const blogPost = await this.blogPostModel
+      .findOne({ user: userId, _id: id })
+      .lean()
+      .exec();
+
+    if (!blogPost) throw new BlogPostNotFoundException();
+
+    return { message: 'Blog post fetched!', data: { blogPost } };
   }
 }
