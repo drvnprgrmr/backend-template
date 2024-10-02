@@ -11,7 +11,7 @@ import { SignupDto } from 'src/user/dto/signup.dto';
 export class AdminService {
   constructor(
     @InjectModel(Admin.name)
-    private readonly adminModel: Model<Admin, object, AdminMethods>,
+    readonly adminModel: Model<Admin, object, AdminMethods>,
     private readonly jwtService: JwtService,
   ) {}
 
