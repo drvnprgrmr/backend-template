@@ -14,6 +14,7 @@ export class BlogPost {
   @Prop({ type: SchemaTypes.ObjectId, ref: 'User', required: true })
   user: Types.ObjectId;
 
+  // todo: add maxlength
   @Prop({ type: String, required: true, unique: true })
   path: string;
 
@@ -23,6 +24,7 @@ export class BlogPost {
   @Prop({ type: String, required: true })
   title: string;
 
+  // todo: add a preview field that contains max of 50 characters
   @Prop({ type: String, required: true })
   body: string;
 

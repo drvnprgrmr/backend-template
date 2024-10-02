@@ -80,6 +80,17 @@ export class BlogService {
     };
   }
 
+  async getPublishedBlogPost(path: string) {
+    const blogPost = await this.blogPostModel.findOne({
+      status: BlogPostStatus.PUBLISHED,
+      path,
+    });
+
+    if (!blogPost) throw new BlogPostNotFoundException();
+
+    return { message: 'Blog post fetched!', data: { blogPost } };
+  }
+
   async getUserBlogPosts(userId: Types.ObjectId, dto: GetUserBlogPostsDto) {
     const { q, status } = dto;
 

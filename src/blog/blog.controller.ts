@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Param,
   Patch,
   Post,
   Query,
@@ -40,6 +41,11 @@ export class BlogController {
   @Get('/post')
   getPublishedBlogPosts(@Query() query: GetPublishedBlogPostsDto) {
     return this.blogService.getPublishedBlogPosts(query);
+  }
+
+  @Get('/post/:path')
+  getPublishedBlogPost(@Param('path') path: string) {
+    return this.blogService.getPublishedBlogPost(path);
   }
 
   @UseGuards(UserGuard)
