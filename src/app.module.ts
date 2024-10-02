@@ -19,6 +19,7 @@ import { AwsCloudfrontModule } from './aws/aws-cloudfront/aws-cloudfront.module'
 import { AwsS3Module } from './aws/aws-s3/aws-s3.module';
 import { SendgridEmailModule } from './sendgrid/sendgrid-email/sendgrid-email.module';
 import { FirebaseMessagingModule } from './firebase/firebase-messaging/firebase-messaging.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -78,6 +79,7 @@ import { FirebaseMessagingModule } from './firebase/firebase-messaging/firebase-
     AwsS3Module,
     SendgridEmailModule,
     FirebaseMessagingModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService],
