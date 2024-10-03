@@ -21,7 +21,7 @@ export enum SendgridEmailAddress {
 
 @Injectable()
 export class SendgridEmailService {
-  private readonly logger: Logger = new Logger(SendgridEmailService.name);
+  private readonly logger = new Logger(SendgridEmailService.name);
 
   constructor(private readonly configService: ConfigService<Config, true>) {
     const sgApiKey = this.configService.get('sendgrid.apiKey', { infer: true });

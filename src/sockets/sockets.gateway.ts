@@ -70,7 +70,7 @@ export class SocketsGateway
 
     if (!token) disconnect('Token not present!');
 
-    let payload;
+    let payload: { sub: string };
     try {
       payload = await this.jwtService.verifyAsync(token);
     } catch {

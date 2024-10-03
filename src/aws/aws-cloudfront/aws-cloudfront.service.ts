@@ -8,7 +8,7 @@ import { AwsConfig, Config } from 'src/config';
 
 @Injectable()
 export class AwsCloudfrontService {
-  private readonly logger: Logger = new Logger(AwsCloudfrontService.name);
+  private readonly logger = new Logger(AwsCloudfrontService.name);
   private readonly client: CloudFrontClient;
   private readonly awsConfig: AwsConfig;
 

@@ -24,7 +24,7 @@ export interface CreateObjectOptions extends UploadFileOptions {
 
 @Injectable()
 export class AwsS3Service {
-  private readonly logger: Logger = new Logger(AwsS3Service.name);
+  private readonly logger = new Logger(AwsS3Service.name);
   private readonly awsConfig: AwsConfig;
   private readonly client: S3Client;
 

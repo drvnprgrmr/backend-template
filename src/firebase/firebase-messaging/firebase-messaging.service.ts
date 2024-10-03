@@ -6,7 +6,7 @@ import { Messaging, getMessaging } from 'firebase-admin/messaging';
 @Injectable()
 export class FirebaseMessagingService {
   private readonly fcm: Messaging;
-  private readonly logger: Logger = new Logger(FirebaseMessagingService.name);
+  private readonly logger = new Logger(FirebaseMessagingService.name);
 
   constructor() {
     const firebaseApp = initializeApp({ credential: applicationDefault() });
