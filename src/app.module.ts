@@ -15,11 +15,10 @@ import { ChatModule } from './chat/chat.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { BlogModule } from './blog/blog.module';
 import { SocketsModule } from './sockets/sockets.module';
-import { AwsCloudfrontModule } from './aws/aws-cloudfront/aws-cloudfront.module';
-import { AwsS3Module } from './aws/aws-s3/aws-s3.module';
 import { SendgridEmailModule } from './sendgrid/sendgrid-email/sendgrid-email.module';
 import { FirebaseMessagingModule } from './firebase/firebase-messaging/firebase-messaging.module';
 import { AdminModule } from './admin/admin.module';
+import { AwsModule } from './aws/aws.module';
 
 @Module({
   imports: [
@@ -75,11 +74,10 @@ import { AdminModule } from './admin/admin.module';
     ChatModule,
     BlogModule,
     SocketsModule,
-    AwsCloudfrontModule,
-    AwsS3Module,
     SendgridEmailModule,
     FirebaseMessagingModule,
     AdminModule,
+    AwsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
