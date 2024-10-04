@@ -12,6 +12,7 @@ import { UpdateMailingListDto } from './app/dto/update-mailing-list.dto';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { SubmitFormDto } from './app/dto/submit-form.dto';
 import { GetBankAccountNameDto } from './app/dto/get-bank-account-name.dto';
+import { GetQrcodeDto } from './app/dto/get-qrcode.dto';
 
 @UseGuards(ThrottlerGuard)
 @Controller()
@@ -36,5 +37,10 @@ export class AppController {
   @Get('/bank-account-name')
   async getBankAccountName(@Query() query: GetBankAccountNameDto) {
     return this.appService.getBankAccountName(query);
+  }
+
+  @Get('/qrcode')
+  async getQrcode(@Query() query: GetQrcodeDto) {
+    return this.appService.getQrcode(query);
   }
 }

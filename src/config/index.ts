@@ -1,12 +1,16 @@
 import * as crypto from 'node:crypto';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import * as fs from 'node:fs';
 import { EnvironmentVariables } from './environment-variables';
 import { plainToInstance } from 'class-transformer';
 import { validateSync } from 'class-validator';
 
 export const APP_NAME = 'template';
 export const TMP_DIR = path.join(os.tmpdir(), APP_NAME);
+
+if (!fs.existsSync(TMP_DIR)) fs.mkdirSync(TMP_DIR);
+console.log('tmpdir', TMP_DIR);
 
 const env = process.env;
 
