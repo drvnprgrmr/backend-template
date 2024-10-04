@@ -17,8 +17,8 @@ export enum SendgridEmailTemplate {
 }
 
 export enum SendgridEmailAddress {
-  SUPPORT = 'support@example.com',
-  NO_REPLY = 'noreply@example.com',
+  SUPPORT = 'support@sphiderassweb.org',
+  NO_REPLY = 'noreply@sphiderassweb.org',
   TEST = 'test@sphiderassweb.org',
 }
 
