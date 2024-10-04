@@ -26,6 +26,7 @@ export interface Config {
   jwt: { secret: string; issuer: string; audience: string; expiresIn: string };
   sendgrid: { apiKey: string };
   aws: AwsConfig;
+  nubanApiKey: string;
 }
 
 export function configuration() {
@@ -67,6 +68,7 @@ export function configuration() {
         distributionId: env.AWS_CLOUDFRONT_DISTRIBUTION_ID,
       },
     },
+    nubanApiKey: env.NUBAN_API_KEY,
   };
 
   return config;

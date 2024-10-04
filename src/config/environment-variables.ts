@@ -49,4 +49,7 @@ export class EnvironmentVariables {
 
   @IsUppercase()
   AWS_CLOUDFRONT_DISTRIBUTION_ID: string;
+
+  @IsString()
+  NUBAN_API_KEY: string;
 }
