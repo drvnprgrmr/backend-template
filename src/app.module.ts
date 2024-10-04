@@ -11,7 +11,6 @@ import { UserModule } from './user/user.module';
 import { JwtModule } from '@nestjs/jwt';
 import { NotificationModule } from './notification/notification.module';
 import { ChatModule } from './chat/chat.module';
-// import { AppGateway } from './app/app.gateway';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { BlogModule } from './blog/blog.module';
 import { SocketsModule } from './sockets/sockets.module';

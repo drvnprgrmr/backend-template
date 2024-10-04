@@ -4,7 +4,10 @@ import { ConfigService } from '@nestjs/config';
 import * as sgMail from '@sendgrid/mail';
 import { MailDataRequired } from '@sendgrid/mail';
 
+import * as client from '@sendgrid/client';
+
 import { Config } from 'src/config';
+import { ContactDto } from './dto/contact.dto';
 
 export enum SendgridEmailTemplate {
   EMAIL_VERIFICATION = 'd-1',
@@ -19,12 +22,17 @@ export enum SendgridEmailAddress {
   TEST = 'test@sphiderassweb.org',
 }
 
+export enum SendgridMailingList {
+  DEFAULT = 'ced324ce-e561-455c-9a4b-c8fb7ffff66b',
+}
+
 @Injectable()
 export class SendgridEmailService {
   private readonly logger = new Logger(SendgridEmailService.name);
 
   constructor(private readonly configService: ConfigService<Config, true>) {
     const sgApiKey = this.configService.get('sendgrid.apiKey', { infer: true });
+    client.setApiKey(sgApiKey);
     sgMail.setApiKey(sgApiKey);
   }
 
@@ -60,5 +68,25 @@ export class SendgridEmailService {
       templateId,
       dynamicTemplateData,
     });
+  }
+
+  async addContactToList(
+    contact: ContactDto,
+    list: SendgridMailingList = SendgridMailingList.DEFAULT,
+  ) {
+    try {
+      const [response, body] = await client.request({
+        url: `/v3/marketing/contacts`,
+        method: 'PUT',
+        body: {
+          list_ids: [list],
+          contacts: [contact],
+        },
+      });
+
+      this.logger.verbose(response, body);
+    } catch (err) {
+      this.logger.error(err);
+    }
   }
 }
