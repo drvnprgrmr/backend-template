@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-cloudfront": "^3.651.1",
+    "@aws-sdk/client-location": "^3.668.0",
     "@aws-sdk/client-s3": "^3.651.1",
     "@aws-sdk/client-ses": "^3.662.0",
     "@aws-sdk/lib-storage": "^3.651.1",

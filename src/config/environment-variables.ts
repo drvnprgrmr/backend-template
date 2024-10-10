@@ -51,5 +51,8 @@ export class EnvironmentVariables {
   AWS_CLOUDFRONT_DISTRIBUTION_ID: string;
 
   @IsString()
+  AWS_LOCATION_INDEX_NAME: string;
+
+  @IsString()
   NUBAN_API_KEY: string;
 }

@@ -12,12 +12,13 @@ export const TMP_DIR = path.join(os.tmpdir(), APP_NAME);
 if (!fs.existsSync(TMP_DIR)) fs.mkdirSync(TMP_DIR);
 console.log('tmpdir', TMP_DIR);
 
-const env = process.env;
+const env = process.env as unknown as EnvironmentVariables;
 
 export interface AwsConfig {
   region: string;
   s3: { bucketName: string };
   cloudfront: { baseUrl: string; distributionId: string };
+  location: { indexName: string };
 }
 
 export interface Config {
@@ -50,7 +51,7 @@ export function configuration() {
     apiUrl,
     websiteUrl,
     isProduction,
-    port: parseInt(env.PORT) || randomPort,
+    port: env.PORT || randomPort,
     mongo: {
       uri: env.MONGO_URI || `mongodb://127.0.0.1:27017/${APP_NAME}`,
     },
@@ -70,6 +71,9 @@ export function configuration() {
       cloudfront: {
         baseUrl: env.AWS_CLOUDFRONT_BASE_URL,
         distributionId: env.AWS_CLOUDFRONT_DISTRIBUTION_ID,
+      },
+      location: {
+        indexName: env.AWS_LOCATION_INDEX_NAME,
       },
     },
     nubanApiKey: env.NUBAN_API_KEY,
