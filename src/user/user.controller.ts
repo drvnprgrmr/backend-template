@@ -24,6 +24,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { GetUsersDto } from './dto/get-users.dto';
 import { SendOtpDto } from './dto/send-otp.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
+import { FollowUserDto } from './dto/follow-user.dto';
 
 @Controller('/user')
 export class UserController {
@@ -84,5 +85,11 @@ export class UserController {
     @UploadedFiles() files: Express.Multer.File[],
   ) {
     return this.userService.upload(req.user.id, files);
+  }
+
+  @UseGuards(UserGuard)
+  @Post('/follow')
+  follow(@Req() req: UserPopulatedRequest, @Body() body: FollowUserDto) {
+    return this.userService.followUser(req.user.id, body);
   }
 }

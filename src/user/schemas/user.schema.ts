@@ -65,6 +65,12 @@ export class User {
   })
   visibility: UserVisibility;
 
+  @Prop({ type: Number, required: true, min: 0, default: 0 })
+  numFollowing: number;
+
+  @Prop({ type: Number, required: true, min: 0, default: 0 })
+  numFollowers: number;
+
   @Prop({ type: Number, min: 0, default: 0 })
   unreadNotifications?: number;
 

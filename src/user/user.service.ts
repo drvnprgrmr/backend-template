@@ -22,6 +22,8 @@ import {
   SendgridEmailService,
   SendgridEmailTemplate,
 } from 'src/sendgrid/sendgrid-email/sendgrid-email.service';
+import { FollowUserDto } from './dto/follow-user.dto';
+import { FollowGroup } from './schemas/follow-group.schema';
 
 @Injectable()
 export class UserService {
@@ -30,6 +32,8 @@ export class UserService {
   constructor(
     @InjectModel(User.name)
     readonly userModel: Model<User, object, UserMethods, { fullName: string }>,
+    @InjectModel(FollowGroup.name)
+    readonly followGroupModel: Model<FollowGroup>,
     private readonly jwtService: JwtService,
     private readonly awsS3Service: AwsS3Service,
     private readonly sendgridEmailService: SendgridEmailService,
@@ -202,5 +206,37 @@ export class UserService {
     }
 
     return { message: 'Files Uploaded Successful!', data: { urls } };
+  }
+
+  async deleteProfile(userId: Types.ObjectId, dto) {}
+
+  async followUser(userId: Types.ObjectId, dto: FollowUserDto) {
+    const { followingId } = dto;
+
+    if (userId.equals(followingId))
+      throw new BadRequestException('Cannot follow self.');
+
+    const following = await this.userModel.findById(followingId).exec();
+
+    if (!following) throw new UserNotFoundException();
+
+    const doc = { follower: userId, following: followingId };
+
+    if (await this.followGroupModel.findOne(doc).exec())
+      throw new BadRequestException('This user is already being followed.');
+
+    await this.userModel
+      .updateOne({ _id: userId }, { $inc: { numFollowing: 1 } })
+      .exec();
+
+    const result = await this.userModel
+      .updateOne({ _id: followingId }, { $inc: { numFollowers: 1 } })
+      .exec();
+
+    if (result.matchedCount < 1) throw new UserNotFoundException();
+
+    await this.followGroupModel.create(doc);
+
+    return { message: 'User has been followed.' };
   }
 }
