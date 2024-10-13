@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, SchemaTypes, Types } from 'mongoose';
 
-export type FollowGroupDocument = HydratedDocument<FollowGroup>;
+export type FollowDocument = HydratedDocument<Follow>;
 
 export enum FollowType {
   FOLLOWER = 'follower',
@@ -9,7 +9,7 @@ export enum FollowType {
 }
 
 @Schema({ timestamps: { createdAt: true, updatedAt: false } })
-export class FollowGroup {
+export class Follow {
   @Prop({ type: SchemaTypes.ObjectId, ref: 'User', required: true })
   follower: Types.ObjectId;
 
@@ -17,4 +17,4 @@ export class FollowGroup {
   following: Types.ObjectId;
 }
 
-export const FollowGroupSchema = SchemaFactory.createForClass(FollowGroup);
+export const FollowSchema = SchemaFactory.createForClass(Follow);

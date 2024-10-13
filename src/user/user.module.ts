@@ -9,7 +9,7 @@ import { MulterModule } from '@nestjs/platform-express';
 import { TMP_DIR } from 'src/config';
 import { SendgridEmailModule } from 'src/sendgrid/sendgrid-email/sendgrid-email.module';
 import { AwsModule } from 'src/aws/aws.module';
-import { FollowGroup, FollowGroupSchema } from './schemas/follow-group.schema';
+import { Follow, FollowSchema } from './schemas/follow.schema';
 
 @Module({
   imports: [
@@ -21,9 +21,9 @@ import { FollowGroup, FollowGroupSchema } from './schemas/follow-group.schema';
     }),
     MongooseModule.forFeatureAsync([
       {
-        name: FollowGroup.name,
+        name: Follow.name,
         useFactory() {
-          const schema = FollowGroupSchema;
+          const schema = FollowSchema;
 
           return schema;
         },

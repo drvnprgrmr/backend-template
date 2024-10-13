@@ -23,7 +23,7 @@ import {
   SendgridEmailTemplate,
 } from 'src/sendgrid/sendgrid-email/sendgrid-email.service';
 import { FollowUserDto } from './dto/follow-user.dto';
-import { FollowGroup, FollowType } from './schemas/follow-group.schema';
+import { Follow, FollowType } from './schemas/follow.schema';
 import { GetFollows } from './dto/get-follows.dto';
 
 @Injectable()
@@ -33,8 +33,8 @@ export class UserService {
   constructor(
     @InjectModel(User.name)
     readonly userModel: Model<User, object, UserMethods, { fullName: string }>,
-    @InjectModel(FollowGroup.name)
-    readonly followGroupModel: Model<FollowGroup>,
+    @InjectModel(Follow.name)
+    readonly followGroupModel: Model<Follow>,
     private readonly jwtService: JwtService,
     private readonly awsS3Service: AwsS3Service,
     private readonly sendgridEmailService: SendgridEmailService,
@@ -265,7 +265,7 @@ export class UserService {
   async getFollows(userId: Types.ObjectId, dto: GetFollows) {
     const { type } = dto;
 
-    const filter: FilterQuery<FollowGroup> = {};
+    const filter: FilterQuery<Follow> = {};
 
     let message: string;
 
