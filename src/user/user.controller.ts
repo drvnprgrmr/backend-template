@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -25,6 +26,7 @@ import { GetUsersDto } from './dto/get-users.dto';
 import { SendOtpDto } from './dto/send-otp.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { FollowUserDto } from './dto/follow-user.dto';
+import { GetFollows } from './dto/get-follows.dto';
 
 @Controller('/user')
 export class UserController {
@@ -72,11 +74,6 @@ export class UserController {
     return this.userService.verifyEmail(query);
   }
 
-  @Get('/:id')
-  getPublicProfile(@ObjectId() id: Types.ObjectId) {
-    return this.userService.getPublicProfile(id);
-  }
-
   @UseInterceptors(FilesInterceptor('files'))
   @UseGuards(UserGuard, ThrottlerGuard)
   @Post('/upload')
@@ -89,7 +86,24 @@ export class UserController {
 
   @UseGuards(UserGuard)
   @Post('/follow')
-  follow(@Req() req: UserPopulatedRequest, @Body() body: FollowUserDto) {
+  followUser(@Req() req: UserPopulatedRequest, @Body() body: FollowUserDto) {
     return this.userService.followUser(req.user.id, body);
+  }
+
+  @UseGuards(UserGuard)
+  @Delete('/follow')
+  unfollowUser(@Req() req: UserPopulatedRequest, @Query() body: FollowUserDto) {
+    return this.userService.unfollowUser(req.user.id, body);
+  }
+
+  @UseGuards(UserGuard)
+  @Get('/follow')
+  getFollows(@Req() req: UserPopulatedRequest, @Query() query: GetFollows) {
+    return this.userService.getFollows(req.user.id, query);
+  }
+
+  @Get('/:id')
+  getPublicProfile(@ObjectId() id: Types.ObjectId) {
+    return this.userService.getPublicProfile(id);
   }
 }

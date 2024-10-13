@@ -23,7 +23,8 @@ import {
   SendgridEmailTemplate,
 } from 'src/sendgrid/sendgrid-email/sendgrid-email.service';
 import { FollowUserDto } from './dto/follow-user.dto';
-import { FollowGroup } from './schemas/follow-group.schema';
+import { FollowGroup, FollowType } from './schemas/follow-group.schema';
+import { GetFollows } from './dto/get-follows.dto';
 
 @Injectable()
 export class UserService {
@@ -217,7 +218,6 @@ export class UserService {
       throw new BadRequestException('Cannot follow self.');
 
     const following = await this.userModel.findById(followingId).exec();
-
     if (!following) throw new UserNotFoundException();
 
     const doc = { follower: userId, following: followingId };
@@ -229,14 +229,62 @@ export class UserService {
       .updateOne({ _id: userId }, { $inc: { numFollowing: 1 } })
       .exec();
 
-    const result = await this.userModel
+    await this.userModel
       .updateOne({ _id: followingId }, { $inc: { numFollowers: 1 } })
       .exec();
-
-    if (result.matchedCount < 1) throw new UserNotFoundException();
 
     await this.followGroupModel.create(doc);
 
     return { message: 'User has been followed.' };
+  }
+
+  async unfollowUser(userId: Types.ObjectId, dto: FollowUserDto) {
+    const { followingId } = dto;
+
+    const following = await this.userModel.findById(followingId).exec();
+    if (!following) throw new UserNotFoundException();
+
+    const doc = { follower: userId, following: followingId };
+
+    if (!(await this.followGroupModel.findOne(doc).exec()))
+      throw new BadRequestException('This user is not being followed.');
+
+    await this.userModel
+      .updateOne({ _id: userId }, { $inc: { numFollowing: -1 } })
+      .exec();
+
+    await this.userModel
+      .updateOne({ _id: followingId }, { $inc: { numFollowers: -1 } })
+      .exec();
+
+    await this.followGroupModel.deleteOne(doc);
+
+    return { message: 'User has been unfollowed.' };
+  }
+
+  async getFollows(userId: Types.ObjectId, dto: GetFollows) {
+    const { type } = dto;
+
+    const filter: FilterQuery<FollowGroup> = {};
+
+    let message: string;
+
+    if (type === FollowType.FOLLOWER) {
+      filter[FollowType.FOLLOWING] = userId;
+      message = "List of user's followers";
+    } else if (type === FollowType.FOLLOWING) {
+      filter[FollowType.FOLLOWER] = userId;
+      message = 'List of following users';
+    }
+
+    const follows = await this.followGroupModel
+      .find(filter)
+      .select([type, '-_id', 'createdAt'])
+      .populate(type, 'username name')
+      .sort('-createdAt')
+      .lean()
+      .exec();
+
+    return { message, data: { follows } };
   }
 }
