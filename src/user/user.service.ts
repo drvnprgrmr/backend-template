@@ -34,7 +34,7 @@ export class UserService {
     @InjectModel(User.name)
     readonly userModel: Model<User, object, UserMethods, { fullName: string }>,
     @InjectModel(Follow.name)
-    readonly followGroupModel: Model<Follow>,
+    readonly followModel: Model<Follow>,
     private readonly jwtService: JwtService,
     private readonly awsS3Service: AwsS3Service,
     private readonly sendgridEmailService: SendgridEmailService,
@@ -157,7 +157,7 @@ export class UserService {
 
   async getPublicProfile(userId: Types.ObjectId) {
     const user = await this.userModel
-      .findById(userId)
+      .findOne({ _id: userId, visibility: UserVisibility.PUBLIC })
       .select('-password')
       .lean()
       .exec();
@@ -211,6 +211,24 @@ export class UserService {
 
   async deleteProfile(userId: Types.ObjectId, dto) {}
 
+  async getFollow(userId: Types.ObjectId, followId: Types.ObjectId) {
+    const follower = await this.followModel
+      .findOne({ follower: followId, following: userId })
+      .exec();
+
+    const following = await this.followModel
+      .findOne({ following: followId, follower: userId })
+      .exec();
+
+    return {
+      message: 'Follow status fetched.',
+      data: {
+        isFollower: new Boolean(follower),
+        isFollowing: new Boolean(following),
+      },
+    };
+  }
+
   async followUser(userId: Types.ObjectId, dto: FollowUserDto) {
     const { followingId } = dto;
 
@@ -222,7 +240,7 @@ export class UserService {
 
     const doc = { follower: userId, following: followingId };
 
-    if (await this.followGroupModel.findOne(doc).exec())
+    if (await this.followModel.findOne(doc).exec())
       throw new BadRequestException('This user is already being followed.');
 
     await this.userModel
@@ -233,7 +251,7 @@ export class UserService {
       .updateOne({ _id: followingId }, { $inc: { numFollowers: 1 } })
       .exec();
 
-    await this.followGroupModel.create(doc);
+    await this.followModel.create(doc);
 
     return { message: 'User has been followed.' };
   }
@@ -246,7 +264,7 @@ export class UserService {
 
     const doc = { follower: userId, following: followingId };
 
-    if (!(await this.followGroupModel.findOne(doc).exec()))
+    if (!(await this.followModel.findOne(doc).exec()))
       throw new BadRequestException('This user is not being followed.');
 
     await this.userModel
@@ -257,7 +275,7 @@ export class UserService {
       .updateOne({ _id: followingId }, { $inc: { numFollowers: -1 } })
       .exec();
 
-    await this.followGroupModel.deleteOne(doc);
+    await this.followModel.deleteOne(doc);
 
     return { message: 'User has been unfollowed.' };
   }
@@ -277,7 +295,7 @@ export class UserService {
       message = 'List of following users';
     }
 
-    const follows = await this.followGroupModel
+    const follows = await this.followModel
       .find(filter)
       .select([type, '-_id', 'createdAt'])
       .populate(type, 'username name')

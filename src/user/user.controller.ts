@@ -102,6 +102,12 @@ export class UserController {
     return this.userService.getFollows(req.user.id, query);
   }
 
+  @UseGuards(UserGuard)
+  @Get('/follow/:id')
+  getFollow(@Req() req: UserPopulatedRequest, @ObjectId() id: Types.ObjectId) {
+    return this.userService.getFollow(req.user.id, id);
+  }
+
   @Get('/:id')
   getPublicProfile(@ObjectId() id: Types.ObjectId) {
     return this.userService.getPublicProfile(id);
