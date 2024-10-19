@@ -1,5 +1,6 @@
 # Notes
 - when the same type of error is sent more than once, create an exception class for it
+- use 'count' for field names that indicate the number of items of a document or object
 
 # Todo
 - do more research on efficient text search for large collections
