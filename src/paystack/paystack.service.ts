@@ -14,6 +14,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { VerifyTransactionDto } from './dto/verify-transaction.dto';
 import { PaystackTransactionStatus } from './enums/paystack-transaction-status.enum';
 import { UserService } from 'src/user/user.service';
+import { ResolveAccountDto } from './dto/resolve-account.dto';
 
 @Injectable()
 export class PaystackService {
@@ -109,5 +110,19 @@ export class PaystackService {
     } else {
       return { status: 'fail', message: 'Transaction unsuccessful.' };
     }
+  }
+
+  async resolveAccount(dto: ResolveAccountDto) {
+    let response: AxiosResponse;
+    try {
+      response = await this.paystackApi.get('/bank/resolve', { params: dto });
+    } catch (err) {
+      this.logger.error(err.response.data.message);
+      throw new InternalServerErrorException({
+        message: 'Error resolving account.',
+      });
+    }
+
+    return { message: 'Account resolved', data: response.data.data };
   }
 }
