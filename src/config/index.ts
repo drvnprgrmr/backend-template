@@ -32,6 +32,7 @@ export interface Config {
   sendgrid: { apiKey: string };
   aws: AwsConfig;
   nubanApiKey: string;
+  paystack: { publicKey: string; secretKey: string };
 }
 
 export function configuration() {
@@ -77,6 +78,10 @@ export function configuration() {
       },
     },
     nubanApiKey: env.NUBAN_API_KEY,
+    paystack: {
+      publicKey: env.PAYSTACK_PUBLIC_KEY,
+      secretKey: env.PAYSTACK_SECRET_KEY,
+    },
   };
 
   return config;
@@ -88,7 +93,7 @@ export function validateEnv(config: Record<string, unknown>) {
   });
 
   const errors = validateSync(validatedConfig, {
-    skipMissingProperties: true,
+    skipMissingProperties: false,
   });
 
   if (errors.length > 0) throw new Error(errors.toString());

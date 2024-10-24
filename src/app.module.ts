@@ -18,6 +18,7 @@ import { SendgridEmailModule } from './sendgrid/sendgrid-email/sendgrid-email.mo
 import { FirebaseMessagingModule } from './firebase/firebase-messaging/firebase-messaging.module';
 import { AdminModule } from './admin/admin.module';
 import { AwsModule } from './aws/aws.module';
+import { PaystackModule } from './paystack/paystack.module';
 
 @Module({
   imports: [
@@ -77,6 +78,7 @@ import { AwsModule } from './aws/aws.module';
     FirebaseMessagingModule,
     AdminModule,
     AwsModule,
+    PaystackModule,
   ],
   controllers: [AppController],
   providers: [AppService],

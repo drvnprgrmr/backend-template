@@ -1,6 +1,7 @@
 import {
   IsEnum,
   IsNumber,
+  IsOptional,
   IsString,
   IsUppercase,
   IsUrl,
@@ -20,6 +21,7 @@ export class EnvironmentVariables {
   NODE_ENV: NodeEnv;
 
   @IsUrl({ protocols: ['mongo', 'mongodb+srv'], require_protocol: true })
+  @IsOptional()
   MONGO_URI: string;
 
   @Matches(/^(?=SG\.)\S{69}$/)
@@ -27,15 +29,19 @@ export class EnvironmentVariables {
 
   @Min(8)
   @IsString()
+  @IsOptional()
   JWT_SECRET: string;
 
   @IsUrl()
+  @IsOptional()
   JWT_ISSUER: string;
 
   @IsUrl()
+  @IsOptional()
   JWT_AUDIENCE: string;
 
   @Matches(/^\d+[shd]?$/)
+  @IsOptional()
   JWT_EXPIRES_IN: string;
 
   @IsEnum(AwsRegion)
@@ -44,7 +50,7 @@ export class EnvironmentVariables {
   @Matches(/^[\w.-]{3,63}$/)
   AWS_S3_BUCKET_NAME: string;
 
-  @Matches(/^https:\/\/\w+\.cloudfront.net\/$/) // note: using custom subdomain of the app might be better
+  @Matches(/^https:\/\/\w+\.cloudfront.net$/) // note: using custom subdomain of the app might be better
   AWS_CLOUDFRONT_BASE_URL: string;
 
   @IsUppercase()
@@ -55,4 +61,10 @@ export class EnvironmentVariables {
 
   @IsString()
   NUBAN_API_KEY: string;
+
+  @IsString()
+  PAYSTACK_PUBLIC_KEY: string;
+
+  @IsString()
+  PAYSTACK_SECRET_KEY: string;
 }
