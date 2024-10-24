@@ -21,6 +21,12 @@ export interface AwsConfig {
   location: { indexName: string };
 }
 
+export interface PaystackConfig {
+  publicKey: string;
+  secretKey: string;
+  callbackUrl?: string;
+}
+
 export interface Config {
   apiUrl: string;
   websiteUrl: string;
@@ -32,7 +38,7 @@ export interface Config {
   sendgrid: { apiKey: string };
   aws: AwsConfig;
   nubanApiKey: string;
-  paystack: { publicKey: string; secretKey: string };
+  paystack: PaystackConfig;
 }
 
 export function configuration() {
@@ -81,6 +87,7 @@ export function configuration() {
     paystack: {
       publicKey: env.PAYSTACK_PUBLIC_KEY,
       secretKey: env.PAYSTACK_SECRET_KEY,
+      callbackUrl: env.PAYSTACK_CALLBACK_URL,
     },
   };
 

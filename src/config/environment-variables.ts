@@ -67,4 +67,8 @@ export class EnvironmentVariables {
 
   @IsString()
   PAYSTACK_SECRET_KEY: string;
+
+  @IsUrl()
+  @IsOptional()
+  PAYSTACK_CALLBACK_URL: string;
 }
