@@ -13,6 +13,7 @@ import { InitializeTransactionDto } from './dto/initialize-transaction.dto';
 import { VerifyTransactionDto } from './dto/verify-transaction.dto';
 import { ResolveAccountDto } from './dto/resolve-account.dto';
 import { ValidateAccountDto } from './dto/validate-account.dto';
+import { ListBanksDto } from './dto/list-banks.dto';
 
 @Controller('paystack')
 export class PaystackController {
@@ -47,5 +48,11 @@ export class PaystackController {
   @Post('/bank/validate')
   validateAccount(@Body() body: ValidateAccountDto) {
     return this.paystackService.validateAccount(body);
+  }
+
+  @UseGuards(UserGuard)
+  @Get('/bank')
+  listBanks(@Query() query: ListBanksDto) {
+    return this.paystackService.listBanks(query);
   }
 }

@@ -16,6 +16,7 @@ import { PaystackTransactionStatus } from './enums/paystack-transaction-status.e
 import { UserService } from 'src/user/user.service';
 import { ResolveAccountDto } from './dto/resolve-account.dto';
 import { ValidateAccountDto } from './dto/validate-account.dto';
+import { ListBanksDto } from './dto/list-banks.dto';
 
 @Injectable()
 export class PaystackService {
@@ -139,5 +140,24 @@ export class PaystackService {
     }
 
     return { message: 'Account validated', data: response.data.data };
+  }
+
+  async listBanks(dto: ListBanksDto) {
+    let response: AxiosResponse;
+    try {
+      response = await this.paystackApi.get('/bank', {
+        params: { ...dto, use_cursor: true },
+      });
+    } catch (err) {
+      this.logger.error(err.response.data.message);
+      throw new InternalServerErrorException({
+        message: 'Error listing banks.',
+      });
+    }
+
+    return {
+      message: 'Banks retrieved',
+      data: { banks: response.data.data, ...response.data.meta },
+    };
   }
 }
