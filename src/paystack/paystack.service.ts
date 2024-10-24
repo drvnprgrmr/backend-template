@@ -85,26 +85,25 @@ export class PaystackService {
         message: 'Paystack transaction not found.',
       });
 
-    const { status, data } = await this.paystackApi.get(
-      `/transaction/verify/${reference}`,
-    );
-
-    if (status !== 200) {
-      this.logger.error(data.message);
+    let response: AxiosResponse;
+    try {
+      response = await this.paystackApi.get(`/transaction/verify/${reference}`);
+    } catch (err) {
+      this.logger.error(err.response.data.message);
       throw new InternalServerErrorException({
         message: 'Error verifying paystack transaction.',
       });
     }
 
-    paystackTransaction.status = data.data.status;
-    paystackTransaction.currency = data.data.currency;
-    paystackTransaction.transactionId = data.data.id;
+    paystackTransaction.status = response.data.data.status;
+    paystackTransaction.currency = response.data.data.currency;
+    paystackTransaction.transactionId = response.data.data.id;
 
     await paystackTransaction.save();
 
     if (
-      data.data.status === PaystackTransactionStatus.SUCCESS &&
-      data.data.amount === paystackTransaction.amount
+      response.data.data.status === PaystackTransactionStatus.SUCCESS &&
+      response.data.data.amount === paystackTransaction.amount
     ) {
       return { status: 'success', message: 'Transaction successful.' };
     } else {
