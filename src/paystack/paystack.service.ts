@@ -15,6 +15,7 @@ import { VerifyTransactionDto } from './dto/verify-transaction.dto';
 import { PaystackTransactionStatus } from './enums/paystack-transaction-status.enum';
 import { UserService } from 'src/user/user.service';
 import { ResolveAccountDto } from './dto/resolve-account.dto';
+import { ValidateAccountDto } from './dto/validate-account.dto';
 
 @Injectable()
 export class PaystackService {
@@ -124,5 +125,19 @@ export class PaystackService {
     }
 
     return { message: 'Account resolved', data: response.data.data };
+  }
+
+  async validateAccount(dto: ValidateAccountDto) {
+    let response: AxiosResponse;
+    try {
+      response = await this.paystackApi.post('/bank/validate', dto);
+    } catch (err) {
+      this.logger.error(err.response.data.message);
+      throw new InternalServerErrorException({
+        message: 'Error validating account.',
+      });
+    }
+
+    return { message: 'Account validated', data: response.data.data };
   }
 }

@@ -12,6 +12,7 @@ import { UserGuard, UserPopulatedRequest } from 'src/user/user.guard';
 import { InitializeTransactionDto } from './dto/initialize-transaction.dto';
 import { VerifyTransactionDto } from './dto/verify-transaction.dto';
 import { ResolveAccountDto } from './dto/resolve-account.dto';
+import { ValidateAccountDto } from './dto/validate-account.dto';
 
 @Controller('paystack')
 export class PaystackController {
@@ -40,5 +41,11 @@ export class PaystackController {
   @Get('/bank/resolve')
   resolveAccount(@Query() query: ResolveAccountDto) {
     return this.paystackService.resolveAccount(query);
+  }
+
+  @UseGuards(UserGuard)
+  @Post('/bank/validate')
+  validateAccount(@Body() body: ValidateAccountDto) {
+    return this.paystackService.validateAccount(body);
   }
 }
