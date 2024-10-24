@@ -1,4 +1,4 @@
-export enum Currency {
+export enum PaystackCurrency {
   NGN = 'NGN',
   USD = 'USD',
   GHS = 'GHS',

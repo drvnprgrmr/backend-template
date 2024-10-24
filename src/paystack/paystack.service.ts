@@ -1,8 +1,19 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import axios, { AxiosInstance } from 'axios';
+import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { Config, PaystackConfig } from 'src/config';
 import { InitializeTransactionDto } from './dto/initialize-transaction.dto';
+import { Model, Types } from 'mongoose';
+import { PaystackTransaction } from './schemas/paystack-transaction.schema';
+import { InjectModel } from '@nestjs/mongoose';
+import { VerifyTransactionDto } from './dto/verify-transaction.dto';
+import { PaystackTransactionStatus } from './enums/paystack-transaction-status.enum';
+import { UserService } from 'src/user/user.service';
 
 @Injectable()
 export class PaystackService {
@@ -10,7 +21,12 @@ export class PaystackService {
   private readonly paystackApi: AxiosInstance;
   private readonly paystackConfig: PaystackConfig;
 
-  constructor(private readonly configService: ConfigService<Config, true>) {
+  constructor(
+    private readonly configService: ConfigService<Config, true>,
+    @InjectModel(PaystackTransaction.name)
+    private readonly paystackTransactionModel: Model<PaystackTransaction>,
+    private readonly userService: UserService,
+  ) {
     this.paystackConfig = this.configService.get('paystack', { infer: true });
     this.paystackApi = axios.create({
       baseURL: 'https://api.paystack.co',
@@ -20,24 +36,79 @@ export class PaystackService {
     });
   }
 
-  async initializeTransaction(dto: InitializeTransactionDto) {
-    const { status, data } = await this.paystackApi.post(
-      '/transaction/initialize',
-      {
+  async initializeTransaction(
+    userId: Types.ObjectId,
+    dto: InitializeTransactionDto,
+  ) {
+    const { amount } = dto;
+
+    const user = await this.userService.userModel.findById(userId).exec();
+
+    const paystackTransaction = await this.paystackTransactionModel.create({
+      user: userId,
+      amount,
+    });
+
+    let response: AxiosResponse;
+    try {
+      response = await this.paystackApi.post('/transaction/initialize', {
         ...dto,
+        email: user.email.value,
         callback_url: this.paystackConfig.callbackUrl,
-      },
-    );
-
-    if (status !== 200) this.logger.error(data.message);
-
-    const { authorization_url, access_code, reference } = data.data;
-
-    this.logger.debug(data);
+        reference: paystackTransaction.id,
+      });
+    } catch (err) {
+      this.logger.error(err.response.data.message);
+      throw new InternalServerErrorException({
+        message: 'Error initializing paystack transaction.',
+      });
+    }
 
     return {
       message: 'Transaction initialized.',
-      data: { authorization_url, access_code },
+      data: { ...response.data.data },
     };
+  }
+
+  // note: this should be called from another service and the return of success means value can be provided
+  async verifyTransaction(dto: VerifyTransactionDto) {
+    this.logger.debug('verify transaction');
+
+    const { reference } = dto;
+
+    const paystackTransaction = await this.paystackTransactionModel
+      .findById(reference)
+      .exec();
+
+    if (!paystackTransaction)
+      throw new NotFoundException({
+        message: 'Paystack transaction not found.',
+      });
+
+    const { status, data } = await this.paystackApi.get(
+      `/transaction/verify/${reference}`,
+    );
+
+    if (status !== 200) {
+      this.logger.error(data.message);
+      throw new InternalServerErrorException({
+        message: 'Error verifying paystack transaction.',
+      });
+    }
+
+    paystackTransaction.status = data.data.status;
+    paystackTransaction.currency = data.data.currency;
+    paystackTransaction.transactionId = data.data.id;
+
+    await paystackTransaction.save();
+
+    if (
+      data.data.status === PaystackTransactionStatus.SUCCESS &&
+      data.data.amount === paystackTransaction.amount
+    ) {
+      return { status: 'success', message: 'Transaction successful.' };
+    } else {
+      return { status: 'fail', message: 'Transaction unsuccessful.' };
+    }
   }
 }

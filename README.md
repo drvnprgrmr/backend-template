@@ -3,9 +3,11 @@
 - use 'count' for field names that indicate the number of items of a document or object
 
 # Todo
+- add user email to request after guard
 - do more research on efficient text search for large collections
 - add throttler globally
 - create store for throttler (mongo or redis)
+- add multiple email capability (with default)
 
 # Getting started
 
