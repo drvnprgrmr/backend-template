@@ -25,6 +25,7 @@ export interface PaystackConfig {
   publicKey: string;
   secretKey: string;
   callbackUrl?: string;
+  minimumBalance: number;
 }
 
 export interface Config {
@@ -88,6 +89,7 @@ export function configuration() {
       publicKey: env.PAYSTACK_PUBLIC_KEY,
       secretKey: env.PAYSTACK_SECRET_KEY,
       callbackUrl: env.PAYSTACK_CALLBACK_URL,
+      minimumBalance: env.PAYSTACK_MINIMUM_BALANCE || 100_000 * 100,
     },
   };
 

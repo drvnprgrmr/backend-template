@@ -18,6 +18,7 @@ import { ListBanksDto } from './dto/list-banks.dto';
 import { CreateTransferRecipientDto } from './dto/create-transfer-recipient.dto';
 import { ObjectId } from 'src/common/decorators';
 import { Types } from 'mongoose';
+import { InitiateTransferDto } from './dto/initiate-transfer.dto';
 
 @Controller('paystack')
 export class PaystackController {
@@ -32,10 +33,7 @@ export class PaystackController {
     return this.paystackService.initializeTransaction(req.user.id, body);
   }
 
-  /**
-   * note: this route is provided for testing purposes only
-   * the service is meant to be called externally
-   */
+  // note: this route is provided for testing purposes only, the service is meant to be called from another module
   @UseGuards(UserGuard)
   @Get('/transaction/verify')
   verifyTransaction(@Query() query: VerifyTransactionDto) {
@@ -64,6 +62,16 @@ export class PaystackController {
     @ObjectId() id: Types.ObjectId,
   ) {
     return this.paystackService.deleteTransferRecipient(req.user.id, id);
+  }
+
+  // note: this route is provided for testing purposes only, the service is meant to be called from another module
+  @UseGuards(UserGuard)
+  @Post('/transfer')
+  initiateTransfer(
+    @Req() req: UserPopulatedRequest,
+    @Body() body: InitiateTransferDto,
+  ) {
+    return this.paystackService.initiateTransfer(req.user.id, body);
   }
 
   @UseGuards(UserGuard)

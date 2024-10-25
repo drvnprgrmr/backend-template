@@ -8,16 +8,21 @@ export type PaystackTransactionDocument = HydratedDocument<PaystackTransaction>;
 
 @Schema({ timestamps: true })
 export class PaystackTransaction {
-  @Prop({ type: SchemaTypes.ObjectId, ref: 'User', required: true })
+  @Prop({
+    type: SchemaTypes.ObjectId,
+    ref: 'User',
+    required: true,
+    immutable: true,
+  })
   user: Types.ObjectId | UserDocument;
 
-  @Prop({ type: Number })
+  @Prop({ type: Number, immutable: true })
   transactionId: number;
 
-  @Prop({ type: Number, required: true, min: 1 })
+  @Prop({ type: Number, required: true, min: 1, immutable: true })
   amount: number;
 
-  @Prop({ type: String, enum: PaystackCurrency })
+  @Prop({ type: String, enum: PaystackCurrency, immutable: true })
   currency: PaystackCurrency;
 
   @Prop({ type: String, enum: PaystackTransactionStatus })

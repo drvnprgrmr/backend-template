@@ -2,6 +2,7 @@ import {
   IsEnum,
   IsNumber,
   IsOptional,
+  IsPositive,
   IsString,
   IsUppercase,
   IsUrl,
@@ -71,4 +72,8 @@ export class EnvironmentVariables {
   @IsUrl()
   @IsOptional()
   PAYSTACK_CALLBACK_URL: string;
+
+  @IsPositive()
+  @IsOptional()
+  PAYSTACK_MINIMUM_BALANCE: number;
 }

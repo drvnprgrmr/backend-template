@@ -11,11 +11,23 @@ import {
   PaystackTransferRecipient,
   PaystackTransferRecipientSchema,
 } from './schemas/paystack-transfer-recipient.schema';
+import {
+  PaystackTransfer,
+  PaystackTransferSchema,
+} from './schemas/paystack-transfer.schema';
 
 @Module({
   imports: [
     UserModule,
     MongooseModule.forFeatureAsync([
+      {
+        name: PaystackTransfer.name,
+        useFactory() {
+          const schema = PaystackTransferSchema;
+
+          return schema;
+        },
+      },
       {
         name: PaystackTransferRecipient.name,
         useFactory() {

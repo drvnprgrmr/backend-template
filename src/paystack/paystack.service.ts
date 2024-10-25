@@ -21,6 +21,14 @@ import { ListBanksDto } from './dto/list-banks.dto';
 import { CreateTransferRecipientDto } from './dto/create-transfer-recipient.dto';
 import { PaystackTransferRecipient } from './schemas/paystack-transfer-recipient.schema';
 import { ApiResponse } from 'src/common/interfaces';
+import { InitiateTransferDto } from './dto/initiate-transfer.dto';
+import { PaystackCurrency } from './enums/paystack-currency.enum';
+import { PaystackTransfer } from './schemas/paystack-transfer.schema';
+
+/**
+ * note: all these service functions are meant to be as generic as possible
+ * as a result some things like wallet balances for users are not taken into account
+ */
 
 @Injectable()
 export class PaystackService {
@@ -30,6 +38,9 @@ export class PaystackService {
 
   constructor(
     private readonly configService: ConfigService<Config, true>,
+
+    @InjectModel(PaystackTransfer.name)
+    private readonly paystackTransferModel: Model<PaystackTransfer>,
 
     @InjectModel(PaystackTransaction.name)
     private readonly paystackTransactionModel: Model<PaystackTransaction>,
@@ -48,7 +59,9 @@ export class PaystackService {
     });
   }
 
-  //^ ------ TRANSACTIONS
+  // note: should be called on user signup event
+  async createCustomer() {}
+
   async initializeTransaction(
     userId: Types.ObjectId,
     dto: InitializeTransactionDto,
@@ -124,19 +137,13 @@ export class PaystackService {
     }
   }
 
-  //$ ------ TRANSACTIONS
-
-  //^ ------ TRANSFERS
-
-  //^ ------ TRANSFER RECIPIENTS
-
   async createTransferRecipient(
     userId: Types.ObjectId,
     dto: CreateTransferRecipientDto,
   ) {
     const user = await this.userService.userModel.findById(userId).exec();
 
-    const { account_number, bank_code } = dto;
+    const { account_number, bank_code, currency } = dto;
 
     if (
       await this.paystackTransferRecipientModel
@@ -179,6 +186,7 @@ export class PaystackService {
         account_name,
         bank_code,
         bank_name,
+        currency,
       });
 
     return {
@@ -226,11 +234,80 @@ export class PaystackService {
     };
   }
 
-  //$ ------ TRANSFER RECIPIENTS
+  async initiateTransfer(userId: Types.ObjectId, dto: InitiateTransferDto) {
+    const { recipient, amount, reason, currency } = dto;
 
-  //$ ------ TRANSFERS
+    const balance = (await this.checkBalance(currency)) as number;
 
-  //^ ------ BANK
+    if (balance - amount < this.paystackConfig.minimumBalance)
+      throw new BadRequestException(
+        {
+          message:
+            'Transfer cannot be completed at this time.\nTry again later.',
+        },
+        { cause: `insuffient funds for currency: ${currency}` },
+      );
+
+    const paystackTransferRecipient =
+      await this.paystackTransferRecipientModel.findOne({
+        user: userId,
+        recipient_code: recipient,
+      });
+
+    if (!paystackTransferRecipient)
+      throw new BadRequestException({
+        message: 'Transfer recipient does not exist.',
+      });
+
+    const paystackTransfer = await this.paystackTransferModel.create({
+      user: userId,
+      transferRecipient: paystackTransferRecipient.id,
+      amount,
+      currency,
+      reason,
+    });
+
+    try {
+      await this.paystackApi.post('/transfer', {
+        ...dto,
+        reference: paystackTransfer.id,
+      });
+    } catch (err) {
+      this.logger.error(err.response.data.message);
+      throw new InternalServerErrorException({
+        message: 'Error initiating transfer.',
+      });
+    }
+
+    return { message: 'Transfer initiated.', data: { paystackTransfer } };
+  }
+
+  async retryTransfer() {}
+
+  private async checkBalance(currency?: PaystackCurrency) {
+    let response: AxiosResponse;
+    try {
+      response = await this.paystackApi.get('/balance');
+    } catch (err) {
+      this.logger.error(err.response.data.message);
+      throw new InternalServerErrorException({
+        message: 'Error checking paystack balance.',
+      });
+    }
+
+    const results: { currency: string; balance: number }[] = response.data.data;
+
+    this.logger.debug(results);
+
+    if (!currency) return results;
+
+    const balance = results.find(
+      (result) => result.currency === currency,
+    ).balance;
+
+    return balance;
+  }
+
   async resolveAccount(dto: ResolveAccountDto) {
     let response: AxiosResponse;
     try {
@@ -277,5 +354,6 @@ export class PaystackService {
       data: { banks: response.data.data, ...response.data.meta },
     };
   }
-  //$ ------ BANK
+
+  async webhook() {}
 }

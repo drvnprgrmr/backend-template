@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { isNumberString } from 'class-validator';
 import { HydratedDocument, SchemaTypes, Types } from 'mongoose';
 import { UserDocument } from 'src/user/schemas/user.schema';
+import { PaystackCurrency } from '../enums/paystack-currency.enum';
 
 export type PaystackTransferRecipientDocument =
   HydratedDocument<PaystackTransferRecipient>;
@@ -32,6 +33,9 @@ export class PaystackTransferRecipient {
 
   @Prop({ type: String, required: true })
   bank_name: string;
+
+  @Prop({ type: String, required: true, enum: PaystackCurrency })
+  currency: PaystackCurrency;
 }
 
 export const PaystackTransferRecipientSchema = SchemaFactory.createForClass(
