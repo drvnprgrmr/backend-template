@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   InternalServerErrorException,
   Logger,
@@ -17,6 +18,9 @@ import { UserService } from 'src/user/user.service';
 import { ResolveAccountDto } from './dto/resolve-account.dto';
 import { ValidateAccountDto } from './dto/validate-account.dto';
 import { ListBanksDto } from './dto/list-banks.dto';
+import { CreateTransferRecipientDto } from './dto/create-transfer-recipient.dto';
+import { PaystackTransferRecipient } from './schemas/paystack-transfer-recipient.schema';
+import { ApiResponse } from 'src/common/interfaces';
 
 @Injectable()
 export class PaystackService {
@@ -26,8 +30,13 @@ export class PaystackService {
 
   constructor(
     private readonly configService: ConfigService<Config, true>,
+
     @InjectModel(PaystackTransaction.name)
     private readonly paystackTransactionModel: Model<PaystackTransaction>,
+
+    @InjectModel(PaystackTransferRecipient.name)
+    private readonly paystackTransferRecipientModel: Model<PaystackTransferRecipient>,
+
     private readonly userService: UserService,
   ) {
     this.paystackConfig = this.configService.get('paystack', { infer: true });
@@ -39,6 +48,7 @@ export class PaystackService {
     });
   }
 
+  //^ ------ TRANSACTIONS
   async initializeTransaction(
     userId: Types.ObjectId,
     dto: InitializeTransactionDto,
@@ -68,7 +78,7 @@ export class PaystackService {
     }
 
     return {
-      message: 'Transaction initialized.',
+      message: 'Paystack transaction initialized.',
       data: { ...response.data.data },
     };
   }
@@ -114,6 +124,113 @@ export class PaystackService {
     }
   }
 
+  //$ ------ TRANSACTIONS
+
+  //^ ------ TRANSFERS
+
+  //^ ------ TRANSFER RECIPIENTS
+
+  async createTransferRecipient(
+    userId: Types.ObjectId,
+    dto: CreateTransferRecipientDto,
+  ) {
+    const user = await this.userService.userModel.findById(userId).exec();
+
+    const { account_number, bank_code } = dto;
+
+    if (
+      await this.paystackTransferRecipientModel
+        .findOne({
+          user: userId,
+          account_number,
+        })
+        .exec()
+    )
+      throw new BadRequestException({
+        message: 'Account already exists for user.',
+      });
+
+    let response: AxiosResponse;
+    try {
+      response = await this.paystackApi.post('/transferrecipient', {
+        ...dto,
+        name: user.fullName,
+        email: user.email.value,
+      });
+    } catch (err) {
+      this.logger.error(err.response.data.message);
+      throw new InternalServerErrorException({
+        message: 'Error creating transfer recipient with paystack.',
+      });
+    }
+
+    const {
+      recipient_code,
+      details: { account_name, bank_name },
+    } = response.data.data;
+
+    this.logger.debug('transfer recipient responce data', response.data.data);
+
+    const paystackTransferRecipient =
+      await this.paystackTransferRecipientModel.create({
+        user: userId,
+        recipient_code,
+        account_number,
+        account_name,
+        bank_code,
+        bank_name,
+      });
+
+    return {
+      message: 'Paystack transfer recipient created.',
+      data: { paystackTransferRecipient },
+    };
+  }
+
+  async getTransferRecipients(userId: Types.ObjectId): Promise<ApiResponse> {
+    const paystackTransferRecipients = await this.paystackTransferRecipientModel
+      .find({ user: userId })
+      .lean()
+      .exec();
+
+    return {
+      message: "User's paystack transfer recipients fetched.",
+      data: { paystackTransferRecipients },
+    };
+  }
+
+  async deleteTransferRecipient(userId: Types.ObjectId, id: Types.ObjectId) {
+    const paystackTransferRecipient = await this.paystackTransferRecipientModel
+      .findOneAndDelete({ _id: id, user: userId })
+      .exec();
+
+    if (!paystackTransferRecipient)
+      throw new BadRequestException({
+        message: 'Paystack transfer recipient not found.',
+      });
+
+    try {
+      await this.paystackApi.delete(
+        `/transferrecipient/${paystackTransferRecipient.recipient_code}`,
+      );
+    } catch (err) {
+      this.logger.error(err.response.data.message);
+      throw new InternalServerErrorException({
+        message: 'Error deleting transfer recipient from paystack',
+      });
+    }
+
+    return {
+      message: 'Paystack transfer recipient deleted successfully!',
+      data: { paystackTransferRecipient },
+    };
+  }
+
+  //$ ------ TRANSFER RECIPIENTS
+
+  //$ ------ TRANSFERS
+
+  //^ ------ BANK
   async resolveAccount(dto: ResolveAccountDto) {
     let response: AxiosResponse;
     try {
@@ -160,4 +277,5 @@ export class PaystackService {
       data: { banks: response.data.data, ...response.data.meta },
     };
   }
+  //$ ------ BANK
 }

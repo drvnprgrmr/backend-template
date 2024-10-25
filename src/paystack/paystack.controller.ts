@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Post,
   Query,
@@ -14,6 +15,9 @@ import { VerifyTransactionDto } from './dto/verify-transaction.dto';
 import { ResolveAccountDto } from './dto/resolve-account.dto';
 import { ValidateAccountDto } from './dto/validate-account.dto';
 import { ListBanksDto } from './dto/list-banks.dto';
+import { CreateTransferRecipientDto } from './dto/create-transfer-recipient.dto';
+import { ObjectId } from 'src/common/decorators';
+import { Types } from 'mongoose';
 
 @Controller('paystack')
 export class PaystackController {
@@ -36,6 +40,30 @@ export class PaystackController {
   @Get('/transaction/verify')
   verifyTransaction(@Query() query: VerifyTransactionDto) {
     return this.paystackService.verifyTransaction(query);
+  }
+
+  @UseGuards(UserGuard)
+  @Post('/transfer-recipient')
+  createTrasnferRecipient(
+    @Req() req: UserPopulatedRequest,
+    @Body() body: CreateTransferRecipientDto,
+  ) {
+    return this.paystackService.createTransferRecipient(req.user.id, body);
+  }
+
+  @UseGuards(UserGuard)
+  @Get('/transfer-recipient')
+  getTransferRecipients(@Req() req: UserPopulatedRequest) {
+    return this.paystackService.getTransferRecipients(req.user.id);
+  }
+
+  @UseGuards(UserGuard)
+  @Delete('/transfer-recipient/:id')
+  deleteTransferRecipient(
+    @Req() req: UserPopulatedRequest,
+    @ObjectId() id: Types.ObjectId,
+  ) {
+    return this.paystackService.deleteTransferRecipient(req.user.id, id);
   }
 
   @UseGuards(UserGuard)

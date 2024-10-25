@@ -7,11 +7,23 @@ import {
 } from './schemas/paystack-transaction.schema';
 import { UserModule } from 'src/user/user.module';
 import { PaystackController } from './paystack.controller';
+import {
+  PaystackTransferRecipient,
+  PaystackTransferRecipientSchema,
+} from './schemas/paystack-transfer-recipient.schema';
 
 @Module({
   imports: [
     UserModule,
     MongooseModule.forFeatureAsync([
+      {
+        name: PaystackTransferRecipient.name,
+        useFactory() {
+          const schema = PaystackTransferRecipientSchema;
+
+          return schema;
+        },
+      },
       {
         name: PaystackTransaction.name,
         useFactory() {
