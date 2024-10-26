@@ -8,6 +8,8 @@
 - add throttler globally
 - create store for throttler (mongo or redis)
 - add multiple email capability (with default)
+- add multifactor authentication; also add "view" to verify code
+    - implement with guard
 
 # Getting started
 

@@ -42,6 +42,14 @@ import { Follow, FollowSchema } from './schemas/follow.schema';
           schema.pre('save', preSave);
           schema.pre('validate', preValidate);
 
+          schema.index(
+            { createdAt: -1 },
+            {
+              expires: '30d',
+              partialFilterExpression: { 'email.verified': false },
+            },
+          );
+
           return schema;
         },
       },
