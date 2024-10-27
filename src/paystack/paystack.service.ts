@@ -24,6 +24,9 @@ import { ApiResponse } from 'src/common/interfaces';
 import { InitiateTransferDto } from './dto/initiate-transfer.dto';
 import { PaystackCurrency } from './enums/paystack-currency.enum';
 import { PaystackTransfer } from './schemas/paystack-transfer.schema';
+import { UserDocument } from 'src/user/schemas/user.schema';
+import { OnEvent } from '@nestjs/event-emitter';
+import { PaystackCustomer } from './schemas/paystack-customer.schema';
 
 /**
  * note: all these service functions are meant to be as generic as possible
@@ -48,6 +51,9 @@ export class PaystackService {
     @InjectModel(PaystackTransferRecipient.name)
     private readonly paystackTransferRecipientModel: Model<PaystackTransferRecipient>,
 
+    @InjectModel(PaystackCustomer.name)
+    private readonly paystackCustomerModel: Model<PaystackCustomer>,
+
     private readonly userService: UserService,
   ) {
     this.paystackConfig = this.configService.get('paystack', { infer: true });
@@ -60,7 +66,35 @@ export class PaystackService {
   }
 
   // note: should be called on user signup event
-  async createCustomer() {}
+  @OnEvent('user:signup')
+  async createCustomer(user: UserDocument) {
+    const doc = {
+      first_name: user.name?.first,
+      last_name: user.name?.last,
+      email: user.email?.value,
+      phone: user.phone?.value,
+    };
+
+    let response: AxiosResponse;
+    try {
+      response = await this.paystackApi.post('/customer', doc);
+    } catch (err) {
+      return this.logger.error(
+        'Error creating paystack customer',
+        err.response.data.message,
+      );
+    }
+
+    const { customer_code } = response.data.data;
+
+    await this.paystackCustomerModel.create({
+      ...doc,
+      user: user.id,
+      customer_code,
+    });
+
+    this.logger.verbose('paystack customer created', customer_code);
+  }
 
   async initializeTransaction(
     userId: Types.ObjectId,

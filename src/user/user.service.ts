@@ -25,6 +25,7 @@ import {
 import { FollowUserDto } from './dto/follow-user.dto';
 import { Follow, FollowType } from './schemas/follow.schema';
 import { GetFollows } from './dto/get-follows.dto';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class UserService {
@@ -38,6 +39,7 @@ export class UserService {
     private readonly jwtService: JwtService,
     private readonly awsS3Service: AwsS3Service,
     private readonly sendgridEmailService: SendgridEmailService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   // note: write admin module first
@@ -78,6 +80,8 @@ export class UserService {
     if (user) throw new UserAlreadyExistsException();
 
     user = await this.userModel.create(dto);
+
+    this.eventEmitter.emit('user:signup', user);
 
     const token = await this.jwtService.signAsync({
       sub: user.id,
