@@ -1,15 +1,15 @@
 import { Type } from 'class-transformer';
 import { IsEnum, IsJSON, IsOptional, IsPositive } from 'class-validator';
-import { PaystackCurrency } from '../enums/paystack-currency.enum';
+import { Currency } from '../enums/currency.enum';
 
 export class InitializeTransactionDto {
   @Type(() => Number)
   @IsPositive()
   amount: number;
 
-  @IsEnum(PaystackCurrency)
+  @IsEnum(Currency)
   @IsOptional()
-  currency?: PaystackCurrency;
+  currency?: Currency;
 
   @IsJSON()
   @IsOptional()

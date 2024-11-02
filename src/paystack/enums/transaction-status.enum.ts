@@ -1,4 +1,4 @@
-export enum PaystackTransactionStatus {
+export enum TransactionStatus {
   ABANDONED = 'abandoned',
   FAILED = 'failed',
   ONGOING = 'ongoing',

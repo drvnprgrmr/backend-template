@@ -5,14 +5,14 @@ import {
   IsString,
   ValidateIf,
 } from 'class-validator';
-import { PaystackCountry } from '../enums/paystack-country.enum';
 import { Type } from 'class-transformer';
-import { PaystackCurrency } from '../enums/paystack-currency.enum';
+import { Country } from '../enums/country.enum';
+import { Currency } from '../enums/currency.enum';
 
 export class ListBanksDto {
   @ValidateIf((o) => !o.currency)
-  @IsEnum(PaystackCountry)
-  country: PaystackCountry;
+  @IsEnum(Country)
+  country: Country;
 
   @Type(() => Number)
   @IsNumber()
@@ -27,7 +27,7 @@ export class ListBanksDto {
   @IsOptional()
   next: string;
 
-  @IsEnum(PaystackCurrency)
+  @IsEnum(Currency)
   @IsOptional()
-  currency: PaystackCurrency;
+  currency: Currency;
 }

@@ -1,4 +1,4 @@
-export enum PaystackCountry {
+export enum Country {
   GHANA = 'ghana',
   KENYA = 'kenya',
   NIGERIA = 'nigeria',

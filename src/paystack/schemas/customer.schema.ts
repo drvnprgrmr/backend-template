@@ -3,10 +3,10 @@ import { isEmail, isPhoneNumber } from 'class-validator';
 import { HydratedDocument, Types } from 'mongoose';
 import { UserDocument } from 'src/user/schemas/user.schema';
 
-export type PaystackCustomerDocument = HydratedDocument<PaystackCustomer>;
+export type CustomerDocument = HydratedDocument<Customer>;
 
 @Schema({ timestamps: true })
-export class PaystackCustomer {
+export class Customer {
   user: Types.ObjectId | UserDocument;
 
   @Prop({ type: String, required: true })
@@ -33,5 +33,4 @@ export class PaystackCustomer {
   phone: string;
 }
 
-export const PaystackCustomerSchema =
-  SchemaFactory.createForClass(PaystackCustomer);
+export const CustomerSchema = SchemaFactory.createForClass(Customer);

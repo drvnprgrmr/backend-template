@@ -1,10 +1,10 @@
 import { IsEnum, IsNumberString, IsOptional } from 'class-validator';
-import { PaystackRecipientType } from '../enums/paystack-recipient-type.enum';
-import { PaystackCurrency } from '../enums/paystack-currency.enum';
+import { RecipientType } from '../enums/recipient-type.enum';
+import { Currency } from '../enums/currency.enum';
 
 export class CreateTransferRecipientDto {
-  @IsEnum(PaystackRecipientType)
-  type: PaystackRecipientType;
+  @IsEnum(RecipientType)
+  type: RecipientType;
 
   @IsNumberString()
   account_number: string;
@@ -12,7 +12,7 @@ export class CreateTransferRecipientDto {
   @IsNumberString()
   bank_code: string;
 
-  @IsEnum(PaystackCurrency)
+  @IsEnum(Currency)
   @IsOptional()
-  currency: PaystackCurrency = PaystackCurrency.NGN;
+  currency: Currency = Currency.NGN;
 }

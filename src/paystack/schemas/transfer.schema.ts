@@ -1,12 +1,12 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, SchemaTypes, Types } from 'mongoose';
-import { PaystackCurrency } from '../enums/paystack-currency.enum';
-import { PaystackTransferStatus } from '../enums/paystack-transfer-status.enum';
+import { Currency } from '../enums/currency.enum';
+import { TransferStatus } from '../enums/transfer-status.enum';
 
-export type PaystackTransferDocument = HydratedDocument<PaystackTransfer>;
+export type TransferDocument = HydratedDocument<Transfer>;
 
 @Schema({ timestamps: true })
-export class PaystackTransfer {
+export class Transfer {
   @Prop({
     type: SchemaTypes.ObjectId,
     ref: 'User',
@@ -17,7 +17,7 @@ export class PaystackTransfer {
 
   @Prop({
     type: SchemaTypes.ObjectId,
-    ref: 'PaystackTransferRecipient',
+    ref: 'TransferRecipient',
     required: true,
     immutable: true,
   })
@@ -31,20 +31,19 @@ export class PaystackTransfer {
 
   @Prop({
     type: String,
-    enum: PaystackCurrency,
+    enum: Currency,
     required: true,
     immutable: true,
   })
-  currency: PaystackCurrency;
+  currency: Currency;
 
   @Prop({
     type: String,
-    enum: PaystackTransferStatus,
-    default: PaystackTransferStatus.PENDING,
+    enum: TransferStatus,
+    default: TransferStatus.PENDING,
     required: true,
   })
-  status: PaystackTransferStatus;
+  status: TransferStatus;
 }
 
-export const PaystackTransferSchema =
-  SchemaFactory.createForClass(PaystackTransfer);
+export const TransferSchema = SchemaFactory.createForClass(Transfer);

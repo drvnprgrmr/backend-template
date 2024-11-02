@@ -1,57 +1,48 @@
 import { Module } from '@nestjs/common';
 import { PaystackService } from './paystack.service';
 import { MongooseModule } from '@nestjs/mongoose';
-import {
-  PaystackTransaction,
-  PaystackTransactionSchema,
-} from './schemas/paystack-transaction.schema';
+import { Transaction, TransactionSchema } from './schemas/transaction.schema';
 import { UserModule } from 'src/user/user.module';
 import { PaystackController } from './paystack.controller';
 import {
-  PaystackTransferRecipient,
-  PaystackTransferRecipientSchema,
-} from './schemas/paystack-transfer-recipient.schema';
-import {
-  PaystackTransfer,
-  PaystackTransferSchema,
-} from './schemas/paystack-transfer.schema';
-import {
-  PaystackCustomer,
-  PaystackCustomerSchema,
-} from './schemas/paystack-customer.schema';
+  TransferRecipient,
+  TransferRecipientSchema,
+} from './schemas/transfer-recipient.schema';
+import { Transfer, TransferSchema } from './schemas/transfer.schema';
+import { Customer, CustomerSchema } from './schemas/customer.schema';
 
 @Module({
   imports: [
     UserModule,
     MongooseModule.forFeatureAsync([
       {
-        name: PaystackCustomer.name,
+        name: Customer.name,
         useFactory() {
-          const schema = PaystackCustomerSchema;
+          const schema = CustomerSchema;
 
           return schema;
         },
       },
       {
-        name: PaystackTransfer.name,
+        name: Transfer.name,
         useFactory() {
-          const schema = PaystackTransferSchema;
+          const schema = TransferSchema;
 
           return schema;
         },
       },
       {
-        name: PaystackTransferRecipient.name,
+        name: TransferRecipient.name,
         useFactory() {
-          const schema = PaystackTransferRecipientSchema;
+          const schema = TransferRecipientSchema;
 
           return schema;
         },
       },
       {
-        name: PaystackTransaction.name,
+        name: Transaction.name,
         useFactory() {
-          const schema = PaystackTransactionSchema;
+          const schema = TransactionSchema;
 
           return schema;
         },

@@ -10,23 +10,23 @@ import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { Config, PaystackConfig } from 'src/config';
 import { InitializeTransactionDto } from './dto/initialize-transaction.dto';
 import { Model, Types } from 'mongoose';
-import { PaystackTransaction } from './schemas/paystack-transaction.schema';
+import { Transaction } from './schemas/transaction.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { VerifyTransactionDto } from './dto/verify-transaction.dto';
-import { PaystackTransactionStatus } from './enums/paystack-transaction-status.enum';
+import { TransactionStatus } from './enums/transaction-status.enum';
 import { UserService } from 'src/user/user.service';
 import { ResolveAccountDto } from './dto/resolve-account.dto';
 import { ValidateAccountDto } from './dto/validate-account.dto';
 import { ListBanksDto } from './dto/list-banks.dto';
 import { CreateTransferRecipientDto } from './dto/create-transfer-recipient.dto';
-import { PaystackTransferRecipient } from './schemas/paystack-transfer-recipient.schema';
+import { TransferRecipient } from './schemas/transfer-recipient.schema';
 import { ApiResponse } from 'src/common/interfaces';
 import { InitiateTransferDto } from './dto/initiate-transfer.dto';
-import { PaystackCurrency } from './enums/paystack-currency.enum';
-import { PaystackTransfer } from './schemas/paystack-transfer.schema';
+import { Currency } from './enums/currency.enum';
+import { Transfer } from './schemas/transfer.schema';
 import { UserDocument } from 'src/user/schemas/user.schema';
 import { OnEvent } from '@nestjs/event-emitter';
-import { PaystackCustomer } from './schemas/paystack-customer.schema';
+import { Customer } from './schemas/customer.schema';
 
 /**
  * note: all these service functions are meant to be as generic as possible
@@ -36,36 +36,35 @@ import { PaystackCustomer } from './schemas/paystack-customer.schema';
 @Injectable()
 export class PaystackService {
   private readonly logger = new Logger(PaystackService.name);
-  private readonly paystackApi: AxiosInstance;
-  private readonly paystackConfig: PaystackConfig;
+  private readonly api: AxiosInstance;
+  private readonly config: PaystackConfig;
 
   constructor(
     private readonly configService: ConfigService<Config, true>,
 
-    @InjectModel(PaystackTransfer.name)
-    private readonly paystackTransferModel: Model<PaystackTransfer>,
+    @InjectModel(Transfer.name)
+    private readonly transferModel: Model<Transfer>,
 
-    @InjectModel(PaystackTransaction.name)
-    private readonly paystackTransactionModel: Model<PaystackTransaction>,
+    @InjectModel(Transaction.name)
+    private readonly transactionModel: Model<Transaction>,
 
-    @InjectModel(PaystackTransferRecipient.name)
-    private readonly paystackTransferRecipientModel: Model<PaystackTransferRecipient>,
+    @InjectModel(TransferRecipient.name)
+    private readonly transferRecipientModel: Model<TransferRecipient>,
 
-    @InjectModel(PaystackCustomer.name)
-    private readonly paystackCustomerModel: Model<PaystackCustomer>,
+    @InjectModel(Customer.name)
+    private readonly customerModel: Model<Customer>,
 
     private readonly userService: UserService,
   ) {
-    this.paystackConfig = this.configService.get('paystack', { infer: true });
-    this.paystackApi = axios.create({
+    this.config = this.configService.get('paystack', { infer: true });
+    this.api = axios.create({
       baseURL: 'https://api.paystack.co',
       headers: {
-        Authorization: `Bearer ${this.paystackConfig.secretKey}`,
+        Authorization: `Bearer ${this.config.secretKey}`,
       },
     });
   }
 
-  // note: should be called on user signup event
   @OnEvent('user:signup')
   async createCustomer(user: UserDocument) {
     const doc = {
@@ -77,23 +76,23 @@ export class PaystackService {
 
     let response: AxiosResponse;
     try {
-      response = await this.paystackApi.post('/customer', doc);
+      response = await this.api.post('/customer', doc);
     } catch (err) {
       return this.logger.error(
-        'Error creating paystack customer',
+        'Error creating  customer',
         err.response.data.message,
       );
     }
 
     const { customer_code } = response.data.data;
 
-    await this.paystackCustomerModel.create({
+    await this.customerModel.create({
       ...doc,
       user: user.id,
       customer_code,
     });
 
-    this.logger.verbose('paystack customer created', customer_code);
+    this.logger.verbose(' customer created', customer_code);
   }
 
   async initializeTransaction(
@@ -104,28 +103,28 @@ export class PaystackService {
 
     const user = await this.userService.userModel.findById(userId).exec();
 
-    const paystackTransaction = await this.paystackTransactionModel.create({
+    const Transaction = await this.transactionModel.create({
       user: userId,
       amount,
     });
 
     let response: AxiosResponse;
     try {
-      response = await this.paystackApi.post('/transaction/initialize', {
+      response = await this.api.post('/transaction/initialize', {
         ...dto,
         email: user.email.value,
-        callback_url: this.paystackConfig.callbackUrl,
-        reference: paystackTransaction.id,
+        callback_url: this.config.callbackUrl,
+        reference: Transaction.id,
       });
     } catch (err) {
       this.logger.error(err.response.data.message);
       throw new InternalServerErrorException({
-        message: 'Error initializing paystack transaction.',
+        message: 'Error initializing  transaction.',
       });
     }
 
     return {
-      message: 'Paystack transaction initialized.',
+      message: ' transaction initialized.',
       data: { ...response.data.data },
     };
   }
@@ -136,34 +135,32 @@ export class PaystackService {
 
     const { reference } = dto;
 
-    const paystackTransaction = await this.paystackTransactionModel
-      .findById(reference)
-      .exec();
+    const Transaction = await this.transactionModel.findById(reference).exec();
 
-    if (!paystackTransaction)
+    if (!Transaction)
       throw new NotFoundException({
-        message: 'Paystack transaction not found.',
+        message: ' transaction not found.',
       });
 
     let response: AxiosResponse;
     try {
-      response = await this.paystackApi.get(`/transaction/verify/${reference}`);
+      response = await this.api.get(`/transaction/verify/${reference}`);
     } catch (err) {
       this.logger.error(err.response.data.message);
       throw new InternalServerErrorException({
-        message: 'Error verifying paystack transaction.',
+        message: 'Error verifying  transaction.',
       });
     }
 
-    paystackTransaction.status = response.data.data.status;
-    paystackTransaction.currency = response.data.data.currency;
-    paystackTransaction.transactionId = response.data.data.id;
+    Transaction.status = response.data.data.status;
+    Transaction.currency = response.data.data.currency;
+    Transaction.transactionId = response.data.data.id;
 
-    await paystackTransaction.save();
+    await Transaction.save();
 
     if (
-      response.data.data.status === PaystackTransactionStatus.SUCCESS &&
-      response.data.data.amount === paystackTransaction.amount
+      response.data.data.status === TransactionStatus.SUCCESS &&
+      response.data.data.amount === Transaction.amount
     ) {
       return { status: 'success', message: 'Transaction successful.' };
     } else {
@@ -180,7 +177,7 @@ export class PaystackService {
     const { account_number, bank_code, currency } = dto;
 
     if (
-      await this.paystackTransferRecipientModel
+      await this.transferRecipientModel
         .findOne({
           user: userId,
           account_number,
@@ -193,7 +190,7 @@ export class PaystackService {
 
     let response: AxiosResponse;
     try {
-      response = await this.paystackApi.post('/transferrecipient', {
+      response = await this.api.post('/transferrecipient', {
         ...dto,
         name: user.fullName,
         email: user.email.value,
@@ -201,7 +198,7 @@ export class PaystackService {
     } catch (err) {
       this.logger.error(err.response.data.message);
       throw new InternalServerErrorException({
-        message: 'Error creating transfer recipient with paystack.',
+        message: 'Error creating transfer recipient with .',
       });
     }
 
@@ -212,59 +209,63 @@ export class PaystackService {
 
     this.logger.debug('transfer recipient responce data', response.data.data);
 
-    const paystackTransferRecipient =
-      await this.paystackTransferRecipientModel.create({
-        user: userId,
-        recipient_code,
-        account_number,
-        account_name,
-        bank_code,
-        bank_name,
-        currency,
-      });
+    const transferRecipient = await this.transferRecipientModel.create({
+      user: userId,
+      recipient_code,
+      account_number,
+      account_name,
+      bank_code,
+      bank_name,
+      currency,
+    });
 
     return {
-      message: 'Paystack transfer recipient created.',
-      data: { paystackTransferRecipient },
+      message: ' transfer recipient created.',
+      data: { transferRecipient },
     };
   }
 
   async getTransferRecipients(userId: Types.ObjectId): Promise<ApiResponse> {
-    const paystackTransferRecipients = await this.paystackTransferRecipientModel
-      .find({ user: userId })
+    const transferRecipients = await this.transferRecipientModel
+      .find({
+        user: userId,
+      })
       .lean()
       .exec();
 
     return {
-      message: "User's paystack transfer recipients fetched.",
-      data: { paystackTransferRecipients },
+      message: "User's  transfer recipients fetched.",
+      data: { transferRecipients },
     };
   }
 
   async deleteTransferRecipient(userId: Types.ObjectId, id: Types.ObjectId) {
-    const paystackTransferRecipient = await this.paystackTransferRecipientModel
-      .findOneAndDelete({ _id: id, user: userId })
+    const transferRecipient = await this.transferRecipientModel
+      .findOneAndDelete({
+        _id: id,
+        user: userId,
+      })
       .exec();
 
-    if (!paystackTransferRecipient)
+    if (!transferRecipient)
       throw new BadRequestException({
-        message: 'Paystack transfer recipient not found.',
+        message: ' transfer recipient not found.',
       });
 
     try {
-      await this.paystackApi.delete(
-        `/transferrecipient/${paystackTransferRecipient.recipient_code}`,
+      await this.api.delete(
+        `/transferrecipient/${transferRecipient.recipient_code}`,
       );
     } catch (err) {
       this.logger.error(err.response.data.message);
       throw new InternalServerErrorException({
-        message: 'Error deleting transfer recipient from paystack',
+        message: 'Error deleting transfer recipient from ',
       });
     }
 
     return {
-      message: 'Paystack transfer recipient deleted successfully!',
-      data: { paystackTransferRecipient },
+      message: ' transfer recipient deleted successfully!',
+      data: { transferRecipient },
     };
   }
 
@@ -273,7 +274,7 @@ export class PaystackService {
 
     const balance = (await this.checkBalance(currency)) as number;
 
-    if (balance - amount < this.paystackConfig.minimumBalance)
+    if (balance - amount < this.config.minimumBalance)
       throw new BadRequestException(
         {
           message:
@@ -282,29 +283,28 @@ export class PaystackService {
         { cause: `insuffient funds for currency: ${currency}` },
       );
 
-    const paystackTransferRecipient =
-      await this.paystackTransferRecipientModel.findOne({
-        user: userId,
-        recipient_code: recipient,
-      });
+    const transferRecipient = await this.transferRecipientModel.findOne({
+      user: userId,
+      recipient_code: recipient,
+    });
 
-    if (!paystackTransferRecipient)
+    if (!transferRecipient)
       throw new BadRequestException({
         message: 'Transfer recipient does not exist.',
       });
 
-    const paystackTransfer = await this.paystackTransferModel.create({
+    const Transfer = await this.transferModel.create({
       user: userId,
-      transferRecipient: paystackTransferRecipient.id,
+      transferRecipient: transferRecipient.id,
       amount,
       currency,
       reason,
     });
 
     try {
-      await this.paystackApi.post('/transfer', {
+      await this.api.post('/transfer', {
         ...dto,
-        reference: paystackTransfer.id,
+        reference: Transfer.id,
       });
     } catch (err) {
       this.logger.error(err.response.data.message);
@@ -313,19 +313,19 @@ export class PaystackService {
       });
     }
 
-    return { message: 'Transfer initiated.', data: { paystackTransfer } };
+    return { message: 'Transfer initiated.', data: { Transfer } };
   }
 
   async retryTransfer() {}
 
-  private async checkBalance(currency?: PaystackCurrency) {
+  private async checkBalance(currency?: Currency) {
     let response: AxiosResponse;
     try {
-      response = await this.paystackApi.get('/balance');
+      response = await this.api.get('/balance');
     } catch (err) {
       this.logger.error(err.response.data.message);
       throw new InternalServerErrorException({
-        message: 'Error checking paystack balance.',
+        message: 'Error checking  balance.',
       });
     }
 
@@ -345,7 +345,7 @@ export class PaystackService {
   async resolveAccount(dto: ResolveAccountDto) {
     let response: AxiosResponse;
     try {
-      response = await this.paystackApi.get('/bank/resolve', { params: dto });
+      response = await this.api.get('/bank/resolve', { params: dto });
     } catch (err) {
       this.logger.error(err.response.data.message);
       throw new InternalServerErrorException({
@@ -359,7 +359,7 @@ export class PaystackService {
   async validateAccount(dto: ValidateAccountDto) {
     let response: AxiosResponse;
     try {
-      response = await this.paystackApi.post('/bank/validate', dto);
+      response = await this.api.post('/bank/validate', dto);
     } catch (err) {
       this.logger.error(err.response.data.message);
       throw new InternalServerErrorException({
@@ -373,7 +373,7 @@ export class PaystackService {
   async listBanks(dto: ListBanksDto) {
     let response: AxiosResponse;
     try {
-      response = await this.paystackApi.get('/bank', {
+      response = await this.api.get('/bank', {
         params: { ...dto, use_cursor: true },
       });
     } catch (err) {

@@ -1,5 +1,5 @@
 import { IsEnum, IsOptional, IsPositive, IsString } from 'class-validator';
-import { PaystackCurrency } from '../enums/paystack-currency.enum';
+import { Currency } from '../enums/currency.enum';
 
 export class InitiateTransferDto {
   @IsString()
@@ -16,7 +16,7 @@ export class InitiateTransferDto {
   @IsOptional()
   reason?: string;
 
-  @IsEnum(PaystackCurrency)
+  @IsEnum(Currency)
   @IsOptional()
-  currency: PaystackCurrency = PaystackCurrency.NGN;
+  currency: Currency = Currency.NGN;
 }
