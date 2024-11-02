@@ -27,6 +27,9 @@ import { Transfer } from './schemas/transfer.schema';
 import { UserDocument } from 'src/user/schemas/user.schema';
 import { OnEvent } from '@nestjs/event-emitter';
 import { Customer } from './schemas/customer.schema';
+import { WebhookDto } from './dto/webhook.dto';
+import { Request, Response } from 'express';
+import * as crypto from 'node:crypto';
 
 /**
  * note: all these service functions are meant to be as generic as possible
@@ -389,5 +392,101 @@ export class PaystackService {
     };
   }
 
-  async webhook() {}
+  async webhook(req: Request, res: Response, dto: WebhookDto) {
+    // todo: use a whitelisting guard instead
+    const ipWhitelist = ['52.31.139.75', '52.49.173.169', '52.214.14.220'];
+
+    if (!ipWhitelist.includes(req.ip)) {
+      this.logger.warn('unknown source ip', req.ip);
+      return res.end();
+    }
+
+    const hash = crypto
+      .createHmac('sha512', this.config.secretKey)
+      .update(JSON.stringify(req.body))
+      .digest('hex');
+
+    if (hash !== req.headers['x-paystack-signature']) {
+      this.logger.warn('hash does not match');
+      return res.end();
+    }
+
+    const { event, data } = dto;
+
+    switch (event) {
+      case 'charge.dispute.create':
+        break;
+
+      case 'charge.dispute.remind':
+        break;
+
+      case 'charge.dispute.resolve':
+        break;
+
+      case 'charge.success':
+        break;
+
+      case 'customeridentification.failed':
+        break;
+
+      case 'customeridentification.success':
+        break;
+
+      case 'dedicatedaccount.assign.failed':
+        break;
+
+      case 'dedicatedaccount.assign.success':
+        break;
+
+      case 'invoice.create':
+        break;
+
+      case 'invoice.payment_failed':
+        break;
+
+      case 'invoice.update':
+        break;
+
+      case 'paymentrequest.pending':
+        break;
+
+      case 'paymentrequest.success':
+        break;
+
+      case 'refund.failed':
+        break;
+
+      case 'refund.pending':
+        break;
+
+      case 'refund.processed':
+        break;
+
+      case 'refund.processing':
+        break;
+
+      case 'subscription.create':
+        break;
+
+      case 'subscription.disable':
+        break;
+
+      case 'subscription.expiring_cards':
+        break;
+
+      case 'subscription.not_renew':
+        break;
+
+      case 'transfer.failed':
+        break;
+
+      case 'transfer.success':
+        break;
+
+      case 'transfer.reversed':
+        break;
+    }
+
+    if (!res.writableEnded) res.end();
+  }
 }
