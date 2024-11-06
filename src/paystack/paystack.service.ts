@@ -25,7 +25,7 @@ import { InitiateTransferDto } from './dto/initiate-transfer.dto';
 import { Currency } from './enums/currency.enum';
 import { Transfer } from './schemas/transfer.schema';
 import { UserDocument } from 'src/user/schemas/user.schema';
-import { OnEvent } from '@nestjs/event-emitter';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Customer } from './schemas/customer.schema';
 import { WebhookDto } from './dto/webhook.dto';
 import { Request, Response } from 'express';
@@ -44,6 +44,8 @@ export class PaystackService {
 
   constructor(
     private readonly configService: ConfigService<Config, true>,
+
+    private readonly eventEmitter: EventEmitter2,
 
     @InjectModel(Transfer.name)
     private readonly transferModel: Model<Transfer>,
@@ -102,13 +104,14 @@ export class PaystackService {
     userId: Types.ObjectId,
     dto: InitializeTransactionDto,
   ) {
-    const { amount } = dto;
+    const { amount, currency } = dto;
 
     const user = await this.userService.userModel.findById(userId).exec();
 
-    const Transaction = await this.transactionModel.create({
+    const transaction = await this.transactionModel.create({
       user: userId,
       amount,
+      currency,
     });
 
     let response: AxiosResponse;
@@ -117,7 +120,7 @@ export class PaystackService {
         ...dto,
         email: user.email.value,
         callback_url: this.config.callbackUrl,
-        reference: Transaction.id,
+        reference: transaction.id,
       });
     } catch (err) {
       this.logger.error(err.response.data.message);
@@ -132,17 +135,17 @@ export class PaystackService {
     };
   }
 
-  // note: this should be called from another service and the return of success means value can be provided
+  // note: should probably be called when a user refreshes a single transaction status
   async verifyTransaction(dto: VerifyTransactionDto) {
     this.logger.debug('verify transaction');
 
     const { reference } = dto;
 
-    const Transaction = await this.transactionModel.findById(reference).exec();
+    const transaction = await this.transactionModel.findById(reference).exec();
 
-    if (!Transaction)
+    if (!transaction)
       throw new NotFoundException({
-        message: ' transaction not found.',
+        message: 'Transaction not found.',
       });
 
     let response: AxiosResponse;
@@ -155,20 +158,16 @@ export class PaystackService {
       });
     }
 
-    Transaction.status = response.data.data.status;
-    Transaction.currency = response.data.data.currency;
-    Transaction.transactionId = response.data.data.id;
+    transaction.status = response.data.data.status;
+    transaction.currency = response.data.data.currency;
+    transaction.transactionId = response.data.data.id;
 
-    await Transaction.save();
+    await transaction.save();
 
-    if (
-      response.data.data.status === TransactionStatus.SUCCESS &&
-      response.data.data.amount === Transaction.amount
-    ) {
-      return { status: 'success', message: 'Transaction successful.' };
-    } else {
-      return { status: 'fail', message: 'Transaction unsuccessful.' };
-    }
+    return {
+      message: 'Transaction verified.',
+      data: { transaction },
+    };
   }
 
   async createTransferRecipient(
@@ -396,22 +395,22 @@ export class PaystackService {
     // todo: use a whitelisting guard instead
     const ipWhitelist = ['52.31.139.75', '52.49.173.169', '52.214.14.220'];
 
-    if (!ipWhitelist.includes(req.ip)) {
-      this.logger.warn('unknown source ip', req.ip);
-      return res.end();
-    }
+    if (!ipWhitelist.includes(req.ip))
+      return this.logger.warn('unknown source ip', req.ip);
 
     const hash = crypto
       .createHmac('sha512', this.config.secretKey)
       .update(JSON.stringify(req.body))
       .digest('hex');
 
-    if (hash !== req.headers['x-paystack-signature']) {
-      this.logger.warn('hash does not match');
-      return res.end();
-    }
+    if (hash !== req.headers['x-paystack-signature'])
+      return this.logger.warn('hash does not match');
+
+    // end response and begin handling logic
+    res.end();
 
     const { event, data } = dto;
+    this.logger.debug(`paystack webhook triggered for '${event}' event`);
 
     switch (event) {
       case 'charge.dispute.create':
@@ -424,6 +423,28 @@ export class PaystackService {
         break;
 
       case 'charge.success':
+        const {
+          reference,
+          amount,
+          metadata: { association },
+        } = data;
+
+        // todo: do this better
+        if (['wallet'].includes(association))
+          return this.logger.warn('invalid transaction association');
+
+        const transaction = await this.transactionModel
+          .findById(reference)
+          .exec();
+        if (!transaction) return this.logger.warn('transaction not found.');
+
+        if (!transaction.consumed && amount === transaction.amount)
+          // the listener for this event should set the transaction to 'consumed' after providing value
+          this.eventEmitter.emit(`paystack:transaction:${association}`, {
+            userId: transaction.user,
+            amount,
+          });
+
         break;
 
       case 'customeridentification.failed':
@@ -486,7 +507,5 @@ export class PaystackService {
       case 'transfer.reversed':
         break;
     }
-
-    if (!res.writableEnded) res.end();
   }
 }

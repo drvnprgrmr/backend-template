@@ -17,7 +17,7 @@ export class Transaction {
   user: Types.ObjectId | UserDocument;
 
   @Prop({ type: Number, immutable: true })
-  transactionId: number;
+  transactionId: number; // Paystack transaction ID
 
   @Prop({ type: Number, required: true, min: 1, immutable: true })
   amount: number;
@@ -27,6 +27,9 @@ export class Transaction {
 
   @Prop({ type: String, enum: TransactionStatus })
   status: TransactionStatus;
+
+  @Prop({ type: Boolean, required: true, default: false })
+  consumed: boolean; // indicates whether or not value has been provided already for this transaction (only meaningful when TransactionStatus is 'success')
 }
 
 export const TransactionSchema = SchemaFactory.createForClass(Transaction);

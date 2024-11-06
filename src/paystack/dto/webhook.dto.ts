@@ -5,5 +5,5 @@ export class WebhookDto {
   event: string;
 
   @IsObject()
-  data: object;
+  data: Record<string, any>;
 }
