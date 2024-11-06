@@ -6,9 +6,10 @@ import helmet from 'helmet';
 
 import { AppModule } from './app.module';
 import { Config } from './config';
+import { NestExpressApplication } from '@nestjs/platform-express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   const configService = app.get(ConfigService<Config, true>);
 
@@ -26,6 +27,8 @@ async function bootstrap() {
   );
 
   app.enableCors({ origin: cors.origin });
+
+  app.set('trust proxy', 'loopback');
 
   await app.listen(port, () => {
     console.log(`Api is listening on port ${port}.`);

@@ -125,12 +125,12 @@ export class PaystackService {
     } catch (err) {
       this.logger.error(err.response.data.message);
       throw new InternalServerErrorException({
-        message: 'Error initializing  transaction.',
+        message: 'Error initializing transaction.',
       });
     }
 
     return {
-      message: ' transaction initialized.',
+      message: 'Transaction initialized.',
       data: { ...response.data.data },
     };
   }
@@ -395,16 +395,20 @@ export class PaystackService {
     // todo: use a whitelisting guard instead
     const ipWhitelist = ['52.31.139.75', '52.49.173.169', '52.214.14.220'];
 
-    if (!ipWhitelist.includes(req.ip))
-      return this.logger.warn('unknown source ip', req.ip);
+    if (!ipWhitelist.includes(req.ip)) {
+      this.logger.warn('unknown source ip', req.ip, req.headers);
+      return res.status(400).end();
+    }
 
     const hash = crypto
       .createHmac('sha512', this.config.secretKey)
       .update(JSON.stringify(req.body))
       .digest('hex');
 
-    if (hash !== req.headers['x-paystack-signature'])
-      return this.logger.warn('hash does not match');
+    if (hash !== req.headers['x-paystack-signature']) {
+      this.logger.warn('hash does not match');
+      return res.status(400).end();
+    }
 
     // end response and begin handling logic
     res.end();

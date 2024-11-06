@@ -6,6 +6,7 @@ import {
   Post,
   Query,
   Req,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { PaystackService } from './paystack.service';
@@ -19,6 +20,8 @@ import { CreateTransferRecipientDto } from './dto/create-transfer-recipient.dto'
 import { ObjectId } from 'src/common/decorators';
 import { Types } from 'mongoose';
 import { InitiateTransferDto } from './dto/initiate-transfer.dto';
+import { Request, Response } from 'express';
+import { WebhookDto } from './dto/webhook.dto';
 
 @Controller('paystack')
 export class PaystackController {
@@ -90,5 +93,10 @@ export class PaystackController {
   @Get('/bank')
   listBanks(@Query() query: ListBanksDto) {
     return this.paystackService.listBanks(query);
+  }
+
+  @Post('/webhook')
+  webhook(@Req() req: Request, @Res() res: Response, @Body() body: WebhookDto) {
+    return this.paystackService.webhook(req, res, body);
   }
 }
