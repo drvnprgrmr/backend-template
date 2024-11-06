@@ -12,6 +12,8 @@ export const TMP_DIR = path.join(os.tmpdir(), APP_NAME);
 if (!fs.existsSync(TMP_DIR)) fs.mkdirSync(TMP_DIR);
 console.log('tmpdir', TMP_DIR);
 
+process.title = APP_NAME;
+
 const env = process.env as unknown as EnvironmentVariables;
 
 export interface AwsConfig {
