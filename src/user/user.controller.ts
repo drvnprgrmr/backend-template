@@ -27,6 +27,7 @@ import { SendOtpDto } from './dto/send-otp.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { FollowUserDto } from './dto/follow-user.dto';
 import { GetFollows } from './dto/get-follows.dto';
+import { VerifyTOTPDto } from './dto/verify-totp.dto';
 
 @Controller('/user')
 export class UserController {
@@ -72,6 +73,18 @@ export class UserController {
   @Get('/verify-email')
   verifyEmail(@Query() query: VerifyEmailDto) {
     return this.userService.verifyEmail(query);
+  }
+
+  @UseGuards(UserGuard)
+  @Get('/totp/enable')
+  enableTOTP(@Req() req: UserPopulatedRequest) {
+    return this.userService.enableTOTP(req.user.id);
+  }
+
+  @UseGuards(UserGuard)
+  @Post('/totp/verify')
+  verifyTOTP(@Req() req: UserPopulatedRequest, @Body() body: VerifyTOTPDto) {
+    return this.userService.verifyTOTP(req.user.id, body);
   }
 
   @UseInterceptors(FilesInterceptor('files'))

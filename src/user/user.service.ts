@@ -27,6 +27,10 @@ import { Follow, FollowType } from './schemas/follow.schema';
 import { GetFollows } from './dto/get-follows.dto';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { Currency } from 'src/common/enums';
+import { TOTPStatus } from 'src/common/schemas';
+import * as otpauth from 'otpauth';
+import { APP_NAME } from 'src/config';
+import { VerifyTOTPDto } from './dto/verify-totp.dto';
 
 @Injectable()
 export class UserService {
@@ -148,6 +152,73 @@ export class UserService {
     await user.save();
 
     return { message: 'Email verified!' };
+  }
+
+  async enableTOTP(userId: Types.ObjectId) {
+    const user = await this.userModel.findById(userId).exec();
+
+    if (!user) throw new UserNotFoundException();
+
+    if (user.totp.status === TOTPStatus.ENABLED) {
+      return {
+        message: 'TOTP has already been enabled.',
+        data: {
+          secret: user.totp.secret,
+          authUrl: user.totp.authUrl,
+          encodedAuthUrl: encodeURIComponent(user.totp.authUrl),
+        },
+      };
+    }
+
+    const totp = new otpauth.TOTP({
+      issuer: APP_NAME,
+      label: user.username,
+      algorithm: 'SHA1',
+      digits: 6,
+      period: 30,
+      secret: new otpauth.Secret({ size: 10 }),
+    });
+
+    const secret = totp.secret.base32;
+    const authUrl = totp.toString();
+
+    user.totp = { status: TOTPStatus.ENABLED, secret, authUrl };
+    await user.save();
+
+    return {
+      message: 'TOTP enabled successfully.',
+      data: { secret, authUrl, encodedAuthUrl: encodeURIComponent(authUrl) },
+    };
+  }
+
+  async verifyTOTP(userId: Types.ObjectId, dto: VerifyTOTPDto) {
+    const { token } = dto;
+
+    const user = await this.userModel.findById(userId).exec();
+
+    if (!user) throw new UserNotFoundException();
+
+    if (user.totp.status === TOTPStatus.DISABLED)
+      throw new BadRequestException({
+        message: 'TOTP has not been enabled for this user',
+      });
+
+    const totp = new otpauth.TOTP({
+      issuer: APP_NAME,
+      label: user.username,
+      algorithm: 'SHA1',
+      digits: 6,
+      period: 30,
+    });
+
+    this.logger.debug('expected totp', totp.generate());
+
+    const delta = await totp.validate({ token });
+
+    if (delta === null)
+      throw new BadRequestException({ message: 'TOTP is invalid' });
+
+    return { message: 'TOTP is valid.' };
   }
 
   async getUserProfile(userId: Types.ObjectId) {

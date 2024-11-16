@@ -5,3 +5,4 @@ export * from './nonce.schema';
 export * from './wallet.schema';
 export * from './geo-json-point.schema';
 export * from './location.schema';
+export * from './totp.schema';

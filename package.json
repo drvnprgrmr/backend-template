@@ -47,6 +47,7 @@
     "luxon": "^3.5.0",
     "mongoose": "^8.7.2",
     "morgan": "^1.10.0",
+    "otpauth": "^9.3.5",
     "qrcode": "^1.5.4",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
