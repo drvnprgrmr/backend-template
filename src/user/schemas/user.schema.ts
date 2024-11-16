@@ -51,8 +51,8 @@ export class User {
   @Prop({ type: Nonce })
   nonce?: Nonce;
 
-  @Prop({ type: Wallet })
-  wallet?: Wallet;
+  @Prop({ type: Wallet, required: true, default: () => ({}) })
+  wallet: Wallet;
 
   @Prop()
   fcmToken?: string;

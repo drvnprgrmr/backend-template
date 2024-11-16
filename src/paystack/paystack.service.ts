@@ -30,6 +30,7 @@ import { Customer } from './schemas/customer.schema';
 import { WebhookDto } from './dto/webhook.dto';
 import { Request, Response } from 'express';
 import * as crypto from 'node:crypto';
+import { json } from 'stream/consumers';
 
 /**
  * note: all these service functions are meant to be as generic as possible
@@ -100,6 +101,13 @@ export class PaystackService {
     this.logger.verbose(' customer created', customer_code);
   }
 
+  // ------
+  // ------
+  // ------
+  // ------
+  // ------
+  // ------
+
   async initializeTransaction(
     userId: Types.ObjectId,
     dto: InitializeTransactionDto,
@@ -121,6 +129,7 @@ export class PaystackService {
         email: user.email.value,
         callback_url: this.config.callbackUrl,
         reference: transaction.id,
+        metadata: JSON.stringify(dto.metadata),
       });
     } catch (err) {
       this.logger.error(err.response.data.message);
@@ -169,6 +178,22 @@ export class PaystackService {
       data: { transaction },
     };
   }
+
+  @OnEvent('transaction:consume')
+  async consumeTransaction(reference: string) {
+    const result = await this.transactionModel
+      .updateOne({ _id: reference }, { consumed: true })
+      .exec();
+
+    if (result.modifiedCount < 1) this.logger.error('Transaction not found.');
+  }
+
+  // ------
+  // ------
+  // ------
+  // ------
+  // ------
+  // ------
 
   async createTransferRecipient(
     userId: Types.ObjectId,
@@ -318,7 +343,21 @@ export class PaystackService {
     return { message: 'Transfer initiated.', data: { Transfer } };
   }
 
+  // ------
+  // ------
+  // ------
+  // ------
+  // ------
+  // ------
+
   async retryTransfer() {}
+
+  // ------
+  // ------
+  // ------
+  // ------
+  // ------
+  // ------
 
   private async checkBalance(currency?: Currency) {
     let response: AxiosResponse;
@@ -430,23 +469,23 @@ export class PaystackService {
         const {
           reference,
           amount,
+          currency,
           metadata: { association },
         } = data;
-
-        // todo: do this better
-        if (['wallet'].includes(association))
-          return this.logger.warn('invalid transaction association');
 
         const transaction = await this.transactionModel
           .findById(reference)
           .exec();
-        if (!transaction) return this.logger.warn('transaction not found.');
+        if (!transaction) return this.logger.warn('Transaction not found.');
 
         if (!transaction.consumed && amount === transaction.amount)
           // the listener for this event should set the transaction to 'consumed' after providing value
-          this.eventEmitter.emit(`paystack:transaction:${association}`, {
+          this.eventEmitter.emit(association, {
             userId: transaction.user,
-            amount,
+            amount: amount / 100,
+            currency,
+
+            reemit: { event: 'transaction:consume', payload: reference },
           });
 
         break;

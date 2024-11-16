@@ -25,7 +25,8 @@ import {
 import { FollowUserDto } from './dto/follow-user.dto';
 import { Follow, FollowType } from './schemas/follow.schema';
 import { GetFollows } from './dto/get-follows.dto';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { Currency } from 'src/common/enums';
 
 @Injectable()
 export class UserService {
@@ -308,5 +309,30 @@ export class UserService {
       .exec();
 
     return { message, data: { follows } };
+  }
+
+  @OnEvent('user:wallet:fund')
+  async fundWallet(payload: {
+    userId: Types.ObjectId;
+    amount: number;
+    currency: Currency;
+
+    // note: might want to add this to an interface defining app events
+    reemit?: { event: string; payload: any };
+  }) {
+    const { userId, amount, currency, reemit } = payload;
+
+    this.logger.debug(amount);
+    const result = await this.userModel
+      .updateOne(
+        { _id: userId, 'wallet.currency': currency },
+        { $inc: { 'wallet.balance': amount } },
+      )
+      .exec();
+
+    if (result.modifiedCount < 1)
+      return this.logger.error(UserNotFoundException.msg);
+
+    if (reemit) this.eventEmitter.emit(reemit.event, reemit.payload);
   }
 }
