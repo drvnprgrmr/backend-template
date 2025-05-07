@@ -2,3 +2,4 @@ ignoredBuiltDependencies:
   - '@firebase/util'
 onlyBuiltDependencies:
   - '@nestjs/core'
+  - '@swc/core'
