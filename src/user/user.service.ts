@@ -50,6 +50,12 @@ export class UserService {
   // note: write admin module first
   async getAllUsers() {}
 
+  async getUserOrThrow(id: Types.ObjectId) {
+    const user = await this.userModel.findById(id).exec();
+    if (!user) throw new UserNotFoundException();
+    return user;
+  }
+
   async getUsers(dto: GetUsersDto) {
     const { q } = dto;
 
@@ -89,7 +95,7 @@ export class UserService {
     this.eventEmitter.emit('user:signup', user);
 
     const token = await this.jwtService.signAsync({
-      sub: user.id,
+      sub: user.id as string,
       typ: 'user',
     });
 
@@ -105,7 +111,7 @@ export class UserService {
       throw new BadRequestException({ message: 'Invalid credentials!' });
 
     const token = await this.jwtService.signAsync({
-      sub: user.id,
+      sub: user.id as string,
       typ: 'user',
     });
 
@@ -160,6 +166,10 @@ export class UserService {
     if (!user) throw new UserNotFoundException();
 
     if (user.totp.status === TOTPStatus.ENABLED) {
+      // might need refactoring
+      if (!user.totp.authUrl || !user.totp.secret)
+        throw new BadRequestException({ message: 'Data missing.' });
+
       return {
         message: 'TOTP has already been enabled.',
         data: {
@@ -198,7 +208,7 @@ export class UserService {
 
     if (!user) throw new UserNotFoundException();
 
-    if (user.totp.status === TOTPStatus.DISABLED)
+    if (user.totp?.status === TOTPStatus.DISABLED)
       throw new BadRequestException({
         message: 'TOTP has not been enabled for this user',
       });
@@ -213,7 +223,7 @@ export class UserService {
 
     this.logger.debug('expected totp', totp.generate());
 
-    const delta = await totp.validate({ token });
+    const delta = totp.validate({ token });
 
     if (delta === null)
       throw new BadRequestException({ message: 'TOTP is invalid' });
@@ -285,7 +295,7 @@ export class UserService {
     return { message: 'Files Uploaded Successful!', data: { urls } };
   }
 
-  async deleteProfile(userId: Types.ObjectId, dto) {}
+  // async deleteProfile(userId: Types.ObjectId, dto) {}
 
   async getFollow(userId: Types.ObjectId, followId: Types.ObjectId) {
     const follower = await this.followModel
@@ -361,7 +371,7 @@ export class UserService {
 
     const filter: FilterQuery<Follow> = {};
 
-    let message: string;
+    let message = '';
 
     if (type === FollowType.FOLLOWER) {
       filter[FollowType.FOLLOWING] = userId;

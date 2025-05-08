@@ -66,11 +66,11 @@ export class SocketsGateway
 
     const token =
       socket.handshake.headers.authorization?.split(' ')[1] ||
-      socket.handshake.auth.token;
+      (socket.handshake.auth.token as string);
 
     if (!token) disconnect('Token not present!');
 
-    let payload: { sub: string };
+    let payload: { sub: string } = { sub: '' };
     try {
       payload = await this.jwtService.verifyAsync(token);
     } catch {
@@ -79,7 +79,7 @@ export class SocketsGateway
 
     const user = await this.userService.userModel.findById(payload.sub);
 
-    if (!user) disconnect('User does not exist!');
+    if (!user) return disconnect('User does not exist!');
 
     if (!user.email.verified) disconnect("User's email is not verified!");
 

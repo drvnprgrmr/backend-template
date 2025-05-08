@@ -32,7 +32,7 @@ export class SendgridEmailService {
 
   constructor(private readonly configService: ConfigService<Config, true>) {
     const sgApiKey = this.configService.get('sendgrid.apiKey', { infer: true });
-    client.setApiKey(sgApiKey);
+    // client.setApiKey(sgApiKey);
     sgMail.setApiKey(sgApiKey);
   }
 

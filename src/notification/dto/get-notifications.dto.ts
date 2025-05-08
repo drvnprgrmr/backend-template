@@ -20,7 +20,7 @@ export class GetNotificationsDto {
   @IsNumber()
   @Type(() => Number)
   @IsOptional()
-  limit?: number = 20;
+  limit: number = 20;
 
   @IsDate()
   @Type(() => Date)

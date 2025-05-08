@@ -31,6 +31,7 @@ import { WebhookDto } from './dto/webhook.dto';
 import { Request, Response } from 'express';
 import * as crypto from 'node:crypto';
 import { json } from 'stream/consumers';
+import { UserNotFoundException } from 'src/user/exceptions';
 
 /**
  * note: all these service functions are meant to be as generic as possible
@@ -114,7 +115,7 @@ export class PaystackService {
   ) {
     const { amount, currency } = dto;
 
-    const user = await this.userService.userModel.findById(userId).exec();
+    const user = await this.userService.getUserOrThrow(userId);
 
     const transaction = await this.transactionModel.create({
       user: userId,
@@ -199,7 +200,7 @@ export class PaystackService {
     userId: Types.ObjectId,
     dto: CreateTransferRecipientDto,
   ) {
-    const user = await this.userService.userModel.findById(userId).exec();
+    const user = await this.userService.getUserOrThrow(userId);
 
     const { account_number, bank_code, currency } = dto;
 
@@ -370,7 +371,9 @@ export class PaystackService {
       });
     }
 
-    const results: { currency: string; balance: number }[] = response.data.data;
+    const { data: results } = response.data as {
+      data: { currency: Currency; balance: number }[];
+    };
 
     this.logger.debug(results);
 
@@ -378,7 +381,7 @@ export class PaystackService {
 
     const balance = results.find(
       (result) => result.currency === currency,
-    ).balance;
+    )?.balance;
 
     return balance;
   }
@@ -434,7 +437,7 @@ export class PaystackService {
     // todo: use a whitelisting guard instead
     const ipWhitelist = ['52.31.139.75', '52.49.173.169', '52.214.14.220'];
 
-    if (!ipWhitelist.includes(req.ip)) {
+    if (!ipWhitelist.includes(req.ip ?? '')) {
       this.logger.warn('unknown source ip', req.ip, req.headers);
       return res.status(400).end();
     }

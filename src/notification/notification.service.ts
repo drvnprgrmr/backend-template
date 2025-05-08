@@ -47,6 +47,7 @@ export class NotificationService {
       payload,
     });
 
+    // todo: add error handling
     if (user.fcmToken && sendPush)
       this.firebaseMessagingService.sendWithToken({
         token: user.fcmToken,

@@ -1,4 +1,4 @@
-import { Injectable, StreamableFile } from '@nestjs/common';
+import { Injectable, Logger, StreamableFile } from '@nestjs/common';
 import {
   SendgridEmailAddress,
   SendgridEmailService,
@@ -18,6 +18,8 @@ import * as fs from 'node:fs/promises';
 
 @Injectable()
 export class AppService {
+  private readonly logger = new Logger(AppService.name);
+
   constructor(
     private readonly configService: ConfigService<Config, true>,
     private readonly sendgridEmailService: SendgridEmailService,
@@ -72,7 +74,7 @@ export class AppService {
   async getQrcode(dto: GetQrcodeDto) {
     const { data, fileType } = dto;
 
-    let mimetype: string;
+    let mimetype = 'image/png'; // default
     if (fileType === QrcodeFileType.PNG) mimetype = 'image/png';
     else if (fileType === QrcodeFileType.SVG) mimetype = 'image/svg+xml';
 
@@ -82,7 +84,9 @@ export class AppService {
 
     const file = await fs.open(filePath);
     const rStream = file.createReadStream();
-    rStream.on('end', () => fs.unlink(filePath));
+    rStream.on('end', () => {
+      fs.unlink(filePath).catch((err) => this.logger.error(err));
+    });
 
     return new StreamableFile(rStream, { type: mimetype });
   }

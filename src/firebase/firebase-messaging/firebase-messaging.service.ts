@@ -22,7 +22,7 @@ export class FirebaseMessagingService {
   }) {
     const { token, title, body, image, data } = details;
 
-    Object.keys(data).forEach((key) => data[key] ?? delete data[key]);
+    if (data) Object.keys(data).forEach((key) => data[key] ?? delete data[key]);
 
     try {
       const messageId = await this.fcm.send({

@@ -64,7 +64,10 @@ export class BlogService {
       ],
     };
 
+    //@ts-expect-error incorrect error
     if (userId) filter.$and.push({ user: userId });
+
+    //@ts-expect-error incorrect error
     if (q) filter.$and.push({ $or: [{ title: { $regex: q, $options: 'i' } }] });
 
     const blogPosts = await this.blogPostModel
@@ -104,7 +107,10 @@ export class BlogService {
 
     const filter: FilterQuery<BlogPost> = { $and: [{ user: userId }] };
 
+    //@ts-expect-error incorrect error
     if (q) filter.$and.push({ $or: [{ title: { $regex: q, $options: 'i' } }] });
+
+    //@ts-expect-error incorrect error
     if (status) filter.$and.push({ status });
 
     const blogPosts = await this.blogPostModel

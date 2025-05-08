@@ -1,1 +1,1 @@
-export * from './random-numbers.util';
+export * from './random.util';

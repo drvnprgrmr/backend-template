@@ -36,7 +36,7 @@ import { Follow, FollowSchema } from './schemas/follow.schema';
           for (const method of userMethods) schema.method(method.name, method);
 
           schema.virtual('fullName').get(function () {
-            return `${this.name.first ?? ''} ${this.name.last ?? ''}`.trim();
+            return `${this.name?.first ?? ''} ${this.name?.last ?? ''}`.trim();
           });
 
           schema.pre('save', preSave);

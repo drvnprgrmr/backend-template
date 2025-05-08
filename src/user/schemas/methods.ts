@@ -27,7 +27,7 @@ export interface UserMethods {
 }
 
 const verifyHash: VerifyHash = async function (path, plain) {
-  return await bcrypt.compare(plain, this.get(path));
+  return await bcrypt.compare(plain, this.get(path) as string);
 };
 
 const generateNonce: GenerateNonce = async function (

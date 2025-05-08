@@ -1,9 +1,9 @@
 import { Prop } from '@nestjs/mongoose';
 
 export class Nonce {
-  @Prop()
+  @Prop({ type: String, default: '' })
   value: string;
 
-  @Prop()
+  @Prop({ type: Date, default: Date.now })
   expiresAt: Date;
 }

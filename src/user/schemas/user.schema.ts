@@ -28,10 +28,10 @@ export class User {
   username: string;
 
   @Prop({ type: Name })
-  name?: Name;
+  name: Name;
 
   @Prop({ type: Email })
-  email?: Email;
+  email: Email;
 
   @Prop({ type: Phone })
   phone?: Phone;
@@ -40,19 +40,19 @@ export class User {
   bio?: string;
 
   @Prop()
-  password?: string;
+  password: string;
 
   @Prop({ type: TOTP })
-  totp?: TOTP;
+  totp: TOTP;
 
-  @Prop({ type: String, enum: Gender })
-  gender?: Gender;
+  @Prop({ type: String, enum: Gender, default: Gender.NOT_STATED })
+  gender: Gender;
 
   @Prop({ type: Date })
-  birthday?: Date;
+  birthday: Date;
 
   @Prop({ type: Nonce })
-  nonce?: Nonce;
+  nonce: Nonce;
 
   @Prop({ type: Wallet, required: true, default: () => ({}) })
   wallet: Wallet;
@@ -75,7 +75,7 @@ export class User {
   numFollowers: number;
 
   @Prop({ type: Number, min: 0, default: 0 })
-  unreadNotifications?: number;
+  unreadNotifications: number;
 
   // todo: isSocketOnline
 }
